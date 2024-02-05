@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: qthuy2609@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - mynet
+    restart: unless-stopped
+
+  postgres-user:
+    container_name: postgres-user
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: users_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-user:/data/postgres
+    restart: always
+#    command: -p 5433
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  postgres-db:
+  pgadmin:
