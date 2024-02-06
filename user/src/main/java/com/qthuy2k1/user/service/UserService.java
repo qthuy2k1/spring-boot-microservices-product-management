@@ -3,6 +3,7 @@ package com.qthuy2k1.user.service;
 import com.qthuy2k1.user.dto.UserRequest;
 import com.qthuy2k1.user.dto.UserResponse;
 import com.qthuy2k1.user.exception.UserAlreadyExistsException;
+import com.qthuy2k1.user.exception.UserNotFoundException;
 import com.qthuy2k1.user.model.Role;
 import com.qthuy2k1.user.model.UserModel;
 import com.qthuy2k1.user.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -38,6 +40,17 @@ public class UserService {
         return users.stream().map(this::convertUserModelToResponse).toList();
     }
 
+    public void deleteUserById(String id) throws UserNotFoundException {
+        Optional<UserModel> userOptional = userRepository.findById(id);
+
+        if (userOptional.isPresent()) {
+            UserModel user = userOptional.get();
+            userRepository.delete(user);
+        } else {
+            throw new UserNotFoundException("user not found with ID: " + id);
+        }
+    }
+
     private UserModel convertUserRequestToModel(UserRequest userRequest) {
         return UserModel.builder()
                 .name(userRequest.getName())
@@ -45,7 +58,6 @@ public class UserService {
                 .role(Role.USER)
                 .build();
     }
-
 
     private UserResponse convertUserModelToResponse(UserModel user) {
         return UserResponse.builder()
