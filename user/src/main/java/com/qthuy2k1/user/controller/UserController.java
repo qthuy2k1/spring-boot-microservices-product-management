@@ -3,6 +3,7 @@ package com.qthuy2k1.user.controller;
 import com.qthuy2k1.user.dto.UserRequest;
 import com.qthuy2k1.user.dto.UserResponse;
 import com.qthuy2k1.user.exception.UserAlreadyExistsException;
+import com.qthuy2k1.user.exception.UserNotFoundException;
 import com.qthuy2k1.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public List<UserResponse> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @DeleteMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public String deleteUser(@PathVariable("id") String id) throws UserNotFoundException {
+        userService.deleteUserById(id);
+        return "success";
     }
 
 }
