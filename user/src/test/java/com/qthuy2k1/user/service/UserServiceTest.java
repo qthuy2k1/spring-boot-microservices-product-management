@@ -1,6 +1,7 @@
 package com.qthuy2k1.user.service;
 
 import com.qthuy2k1.user.dto.UserRequest;
+import com.qthuy2k1.user.dto.UserResponse;
 import com.qthuy2k1.user.exception.UserAlreadyExistsException;
 import com.qthuy2k1.user.model.Role;
 import com.qthuy2k1.user.model.UserModel;
@@ -12,6 +13,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -66,5 +69,14 @@ class UserServiceTest {
                 hasMessageContaining("user already exists with email: " + user.getEmail());
 
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void willGetAllUsers() {
+        // when
+        List<UserResponse> users = underTest.getAllUsers();
+
+        // then
+        verify(userRepository).findAll();
     }
 }
