@@ -23,6 +23,7 @@ import java.util.List;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -46,9 +47,13 @@ class UserControllerTest {
 
 
     @Test
-    void shouldSignup() throws Exception {
+    void signup() throws Exception {
         // given
-        UserRequest userRequest = getUserRequest();
+        UserRequest userRequest = UserRequest.builder()
+                .name("John Doe")
+                .email("doe@gmail.com")
+                .password("123123")
+                .build();
         String userRequestString = objectMapper.writeValueAsString(userRequest);
 
         // when
@@ -64,7 +69,30 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldGetAllUsers() throws Exception {
+    void signup_ExceptionThrown_InvalidRequest() throws Exception {
+        // given
+        UserRequest userRequest = UserRequest.builder()
+                .name("  ") // only whitespaces
+                .email("doe.gmail") // invalid email address
+                .password("123123")
+                .build();
+        String userRequestString = objectMapper.writeValueAsString(userRequest);
+
+        // when
+        String error = "{\"name\":\"your name shouldn't be blank\",\"email\":\"invalid email address\"}";
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userRequestString))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(error))
+                .andDo(print());
+
+        // then
+        verify(userService, never()).createUser(any());
+    }
+
+    @Test
+    void getAllUsers() throws Exception {
         // given
         List<UserResponse> users = new ArrayList<>();
         users.add(
@@ -89,7 +117,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldDeleteUser() throws Exception {
+    void deleteUserById() throws Exception {
         // given
         String id = "1";
 
@@ -105,11 +133,51 @@ class UserControllerTest {
     }
 
 
-    private UserRequest getUserRequest() {
-        return UserRequest.builder()
+    @Test
+    void updateUserById() throws Exception {
+        // given
+        String id = "1";
+        UserRequest userRequest = UserRequest.builder()
                 .name("John Doe")
                 .email("doe@gmail.com")
                 .password("123123")
                 .build();
+        String userRequestString = objectMapper.writeValueAsString(userRequest);
+
+        // when
+        mockMvc.perform(put("/api/v1/users/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userRequestString))
+                .andExpect(status().isOk())
+                .andExpect(content().string("success"))
+                .andDo(print());
+
+        // then
+        verify(userService).updateUserById(id, userRequest);
     }
+
+    @Test
+    void updateUserById_ExceptionThrown_InvalidRequest() throws Exception {
+        // given
+        String id = "1";
+        UserRequest userRequest = UserRequest.builder()
+                .name("  ") // only whitespaces
+                .email("doe.gmail") // invalid email address
+                .password("123123")
+                .build();
+        String userRequestString = objectMapper.writeValueAsString(userRequest);
+
+        // when
+        String error = "{\"name\":\"your name shouldn't be blank\",\"email\":\"invalid email address\"}";
+        mockMvc.perform(put("/api/v1/users/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userRequestString))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(error))
+                .andDo(print());
+
+        // then
+        verify(userService, never()).updateUserById(any(), any());
+    }
+
 }

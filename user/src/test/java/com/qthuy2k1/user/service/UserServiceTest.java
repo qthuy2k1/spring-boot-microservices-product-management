@@ -22,7 +22,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -36,7 +37,7 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldCreateUser() throws UserAlreadyExistsException {
+    void createUser() throws UserAlreadyExistsException {
         // given
         UserRequest user = new UserRequest("John Doe", "doe@gmail.com", "123123");
 
@@ -57,7 +58,7 @@ class UserServiceTest {
     }
 
     @Test()
-    void willThrowWhenEmailIsTaken() {
+    void createUser_WhenEmailIsTaken_ExceptionThrown() {
         // given
         UserRequest user = new UserRequest("John Doe", "doe@gmail.com", "123123");
 
@@ -73,7 +74,7 @@ class UserServiceTest {
     }
 
     @Test
-    void willGetAllUsers() {
+    void getAllUsers() {
         // when
         List<UserResponse> users = underTest.getAllUsers();
 
@@ -82,11 +83,11 @@ class UserServiceTest {
     }
 
     @Test
-    void willDeleteUser() throws UserNotFoundException {
+    void deleteUser() throws UserNotFoundException {
         // given
         UserModel user = new UserModel(1, "John Doe", "doe@gmail.com", "123123", Role.USER);
 
-        when(userRepository.findById(user.getId().toString())).thenReturn(Optional.of(user));
+        given(userRepository.findById(user.getId().toString())).willReturn(Optional.of(user));
 
         // when
         underTest.deleteUserById(user.getId().toString());
@@ -96,10 +97,9 @@ class UserServiceTest {
     }
 
     @Test
-    void willThrowException_IfUserNotFound_WhenDelete() {
+    void deleteUserById_ExceptionThrown_UserNotFound() {
         // given
         String id = "1";
-
         given(userRepository.findById(id)).willReturn(Optional.empty());
 
         // when
@@ -109,5 +109,61 @@ class UserServiceTest {
                 hasMessageContaining("user not found with ID: " + id);
 
         verify(userRepository, never()).delete(any());
+    }
+
+    @Test
+    void updateUserById() throws UserNotFoundException, UserAlreadyExistsException {
+        // given
+        UserModel existingUser = new UserModel(1, "John Doe", "doe@gmail.com", "123123", Role.USER);
+        UserRequest updatedUser = new UserRequest("Updated Name", "updated.email@example.com", "456456");
+
+        given(userRepository.findById(existingUser.getId().toString())).willReturn(Optional.of(existingUser));
+
+        // when
+        underTest.updateUserById(existingUser.getId().toString(), updatedUser);
+
+        // then
+        ArgumentCaptor<UserModel> userArgumentCaptor = ArgumentCaptor.forClass(UserModel.class);
+        verify(userRepository).save(userArgumentCaptor.capture());
+
+        UserModel capturedUser = userArgumentCaptor.getValue();
+
+        assertThat(capturedUser.getName()).isEqualTo(updatedUser.getName());
+        assertThat(capturedUser.getEmail()).isEqualTo(updatedUser.getEmail());
+        assertThat(BCrypt.checkpw(updatedUser.getPassword(), capturedUser.getPassword())).isTrue();
+        assertThat(capturedUser.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void updateUserById_ExceptionThrown_UserNotFound() {
+        // given
+        String id = "1";
+        UserRequest userRequest = new UserRequest("Updated Name", "updated.email@example.com", "456456");
+
+        given(userRepository.existsByEmail(userRequest.getEmail())).willReturn(false);
+        given(userRepository.findById(id)).willReturn(Optional.empty());
+
+        // when
+        // then
+        assertThatThrownBy(() ->
+                underTest.updateUserById(id, userRequest)).
+                hasMessageContaining("user not found with ID: " + id);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateUserById_ExceptionThrown_EmailAlreadyIsTaken() {
+        // given
+        String id = "1";
+        UserRequest userRequest = new UserRequest("Updated Name", "updated.email@example.com", "456456");
+
+        given(userRepository.existsByEmail(userRequest.getEmail())).willReturn(true);
+
+        // when
+        // then
+        assertThatThrownBy(() ->
+                underTest.updateUserById(id, userRequest)).
+                hasMessageContaining("user already exists with email: " + userRequest.getEmail());
+        verify(userRepository, never()).save(any());
     }
 }

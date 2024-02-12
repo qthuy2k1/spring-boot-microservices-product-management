@@ -12,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -41,14 +40,31 @@ public class UserService {
     }
 
     public void deleteUserById(String id) throws UserNotFoundException {
-        Optional<UserModel> userOptional = userRepository.findById(id);
+        UserModel user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
 
-        if (userOptional.isPresent()) {
-            UserModel user = userOptional.get();
-            userRepository.delete(user);
-        } else {
-            throw new UserNotFoundException("user not found with ID: " + id);
+        userRepository.delete(user);
+    }
+
+    public void updateUserById(String id, UserRequest userRequest)
+            throws UserNotFoundException, UserAlreadyExistsException {
+        // Check if user email already exists
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
+            throw new UserAlreadyExistsException("user already exists with email: " + userRequest.getEmail());
         }
+
+        UserModel user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
+
+        // Update the user information based on the UserRequest
+        user.setName(userRequest.getName());
+        user.setEmail(userRequest.getEmail());
+
+        // Hash the password using BCrypt
+        String pw_hash = BCrypt.hashpw(userRequest.getPassword(), BCrypt.gensalt(10));
+        user.setPassword(pw_hash);
+
+        userRepository.save(user);
     }
 
     private UserModel convertUserRequestToModel(UserRequest userRequest) {

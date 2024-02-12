@@ -40,4 +40,12 @@ public class UserController {
         return "success";
     }
 
+    @PutMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public String updateUser(@PathVariable("id") String id, @RequestBody @Valid UserRequest userRequest)
+            throws UserNotFoundException, UserAlreadyExistsException {
+        userService.updateUserById(id, userRequest);
+        return "success";
+    }
+
 }
