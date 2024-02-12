@@ -15,6 +15,7 @@ services:
       - mynet
     restart: unless-stopped
 
+  # User DB
   postgres-user:
     container_name: postgres-user
     image: postgres
@@ -28,9 +29,39 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./postgres-user:/data/postgres
+      - postgres-user:/data/postgres
     restart: always
-#    command: -p 5433
+
+  # Keycloak Config with Mysql database
+  keycloak-mysql:
+    container_name: keycloak-mysql
+    image: mysql:5.7
+    volumes:
+      - mysql_keycloak_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: password
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:18.0.0
+    command: [ "start-dev", "--import-realm" ]
+    environment:
+      DB_VENDOR: MYSQL
+      DB_ADDR: mysql
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8181:8080"
+    volumes:
+      - realms:/opt/keycloak/data/import/
+    depends_on:
+      - keycloak-mysql
 
 networks:
   mynet:
@@ -39,3 +70,6 @@ networks:
 volumes:
   postgres-db:
   pgadmin:
+  postgres-user:
+  mysql_keycloak_data:
+  realms:
