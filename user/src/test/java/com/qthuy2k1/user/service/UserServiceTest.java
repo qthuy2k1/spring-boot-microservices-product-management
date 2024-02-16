@@ -166,4 +166,43 @@ class UserServiceTest {
                 hasMessageContaining("user already exists with email: " + userRequest.getEmail());
         verify(userRepository, never()).save(any());
     }
+
+
+    @Test
+    void getUserById() throws UserNotFoundException {
+        // given
+        String id = "1";
+        UserModel userModel = new UserModel(1, "User", "user@gmail.com","123123", Role.USER);
+
+        given(userRepository.findById(id)).willReturn(Optional.of(userModel));
+
+        // when
+        UserResponse user = underTest.getUserById(id);
+
+        // then
+        assertThat(user.getId()).isEqualTo(userModel.getId());
+        assertThat(user.getName()).isEqualTo(userModel.getName());
+        assertThat(user.getEmail()).isEqualTo(userModel.getEmail());
+        assertThat(user.getRole()).isEqualTo(userModel.getRole());
+
+        verify(userRepository).findById(id);
+    }
+
+
+    @Test
+    void getUserById_ExceptionThrown_UserNotFound() {
+        // given
+        String id = "1";
+        UserModel userModel = new UserModel(1, "User", "user@gmail.com","123123", Role.USER);
+
+        given(userRepository.findById(id)).willReturn(Optional.empty());
+
+        // when
+        assertThatThrownBy(() ->
+                underTest.getUserById(id))
+                .hasMessageContaining("user not found with ID: " + id);
+
+        // then
+        verify(userRepository).findById(id);
+    }
 }

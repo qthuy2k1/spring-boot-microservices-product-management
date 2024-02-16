@@ -3,6 +3,7 @@ package com.qthuy2k1.user.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qthuy2k1.user.dto.UserRequest;
 import com.qthuy2k1.user.dto.UserResponse;
+import com.qthuy2k1.user.exception.UserNotFoundException;
 import com.qthuy2k1.user.model.Role;
 import com.qthuy2k1.user.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -178,6 +179,49 @@ class UserControllerTest {
 
         // then
         verify(userService, never()).updateUserById(any(), any());
+    }
+
+    @Test
+    void getUserById() throws Exception {
+        // given
+        String id = "1";
+        UserResponse userResponse = UserResponse.builder()
+                .id(1)
+                .name("John Doe")
+                .email("doe@gmail.com")
+                .role(Role.USER)
+                .build();
+        String userResponseString = objectMapper.writeValueAsString(userResponse);
+
+        given(userService.getUserById(id)).willReturn(userResponse);
+
+        // when
+        mockMvc.perform(get("/api/v1/users/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string(userResponseString))
+                .andDo(print());
+
+        // then
+        verify(userService).getUserById(id);
+    }
+
+    @Test
+    void getUserById_ExceptionThrown_UserNotFound() throws Exception {
+        // given
+        String id = "1";
+
+        given(userService.getUserById(id)).willThrow(new UserNotFoundException("user not found with ID: " + id));
+
+        // when
+        mockMvc.perform(get("/api/v1/users/" + id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("{\"error\":\"user not found with ID: " + id + "\"}"))
+                .andDo(print());
+
+        // then
+        verify(userService).getUserById(id);
     }
 
 }

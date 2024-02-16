@@ -44,15 +44,15 @@ public class ApplicationExceptionHandler {
         return errorMap;
     }
 
-//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    @ExceptionHandler(Exception.class)
-//    public Map<String, String> handleUnwantedException(Exception ex) {
-//        log.error("Error exception class: " + ex.getCause() + " - " + ex.getMessage());
-//
-//        // Return "unknown error" to the users instead of the actual errors message
-//        Map<String, String> errorMap = new HashMap<>();
-//        errorMap.put("error", "unknown error");
-//
-//        return errorMap;
-//    }
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public Map<String, String> handleUnwantedException(Exception ex) {
+        log.error("Error exception class: " + ex.getCause() + " - " + ex.getMessage());
+
+        // Return "unknown error" to the users instead of the actual errors message
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("error", "unknown error");
+
+        return errorMap;
+    }
 }

@@ -8,16 +8,28 @@ import com.qthuy2k1.user.model.Role;
 import com.qthuy2k1.user.model.UserModel;
 import com.qthuy2k1.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     public void createUser(UserRequest userRequest) throws UserAlreadyExistsException {
         // Check if user email already exists
@@ -32,6 +44,9 @@ public class UserService {
         user.setPassword(pw_hash);
 
         userRepository.save(user);
+
+        // Produce the message to kafka
+        kafkaTemplate.send("create-user", user.getEmail());
     }
 
     public List<UserResponse> getAllUsers() {
@@ -65,6 +80,17 @@ public class UserService {
         user.setPassword(pw_hash);
 
         userRepository.save(user);
+    }
+
+    public UserResponse getUserById(String id) throws UserNotFoundException {
+        UserModel user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
+
+        return convertUserModelToResponse(user);
+    }
+
+    public Boolean existsById(String id) {
+        return userRepository.existsById(id);
     }
 
     private UserModel convertUserRequestToModel(UserRequest userRequest) {

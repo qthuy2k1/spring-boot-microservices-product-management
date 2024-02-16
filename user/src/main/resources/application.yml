@@ -1,9 +1,9 @@
 server:
-  port: 0
+  port: 12345
 
 spring:
   application:
-    name: user
+    name: "user"
   datasource:
     username: "postgres"
     password: "root"
@@ -15,11 +15,21 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: "true"
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: EMAIL_USERNAME
+    password: EMAIL_PASSWORD
+    properties:
+      mail.smtp.auth: true
+      mail.stmp.starttls.enable: true
+  kafka:
+    bootstrap-servers:
+      - localhost:29092
 
 eureka:
   client:
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
   instance:
-    preferIpAddress: true
-
+    hostname: localhost

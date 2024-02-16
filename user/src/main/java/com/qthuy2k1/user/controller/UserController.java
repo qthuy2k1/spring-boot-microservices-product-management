@@ -6,6 +6,7 @@ import com.qthuy2k1.user.exception.UserAlreadyExistsException;
 import com.qthuy2k1.user.exception.UserNotFoundException;
 import com.qthuy2k1.user.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.Path;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("api/v1/users")
 public class UserController {
@@ -48,4 +48,15 @@ public class UserController {
         return "success";
     }
 
+    @GetMapping("{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse getUser(@PathVariable("id") String id) throws UserNotFoundException {
+        return userService.getUserById(id);
+    }
+
+    @GetMapping("{id}/is-exists")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean existsById(@PathVariable("id") String id) {
+        return userService.existsById(id);
+    }
 }
