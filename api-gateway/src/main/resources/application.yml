@@ -30,13 +30,25 @@ spring:
           uri: http://localhost:8761
           predicates:
             - Path=/eureka/**
+
+        ## Product Service
+        - id: product
+          uri: lb://product
+          predicates:
+            - Path=/api/v1/products/**
+
+        - id: product-category
+          uri: lb://product
+          predicates:
+            - Path=/api/v1/product-categories/**
+
+        - id: notification
+          uri: lb://notification
+          predicates:
+            - Path=/api/v1/messages
+
   main:
     web-application-type: reactive
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8181/realms/product-management-realm
 
 logging:
   level:
