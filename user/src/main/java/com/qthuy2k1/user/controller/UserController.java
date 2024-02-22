@@ -35,28 +35,32 @@ public class UserController {
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
-    public String deleteUser(@PathVariable("id") String id) throws UserNotFoundException {
-        userService.deleteUserById(id);
+    public String deleteUser(@PathVariable("id") String id) throws UserNotFoundException, NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        userService.deleteUserById(parsedId);
         return "success";
     }
 
     @PutMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public String updateUser(@PathVariable("id") String id, @RequestBody @Valid UserRequest userRequest)
-            throws UserNotFoundException, UserAlreadyExistsException {
-        userService.updateUserById(id, userRequest);
+            throws UserNotFoundException, UserAlreadyExistsException, NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        userService.updateUserById(parsedId, userRequest);
         return "success";
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
-    public UserResponse getUser(@PathVariable("id") String id) throws UserNotFoundException {
-        return userService.getUserById(id);
+    public UserResponse getUser(@PathVariable("id") String id) throws UserNotFoundException, NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        return userService.getUserById(parsedId);
     }
 
     @GetMapping("{id}/is-exists")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean existsById(@PathVariable("id") String id) {
-        return userService.existsById(id);
+    public Boolean existsById(@PathVariable("id") String id) throws NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        return userService.existsById(parsedId);
     }
 }

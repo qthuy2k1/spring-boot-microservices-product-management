@@ -120,7 +120,7 @@ class UserControllerTest {
     @Test
     void deleteUserById() throws Exception {
         // given
-        String id = "1";
+        Integer id = 1;
 
         // when
         mockMvc.perform(delete("/api/v1/users/" + id)
@@ -137,7 +137,7 @@ class UserControllerTest {
     @Test
     void updateUserById() throws Exception {
         // given
-        String id = "1";
+        Integer id = 1;
         UserRequest userRequest = UserRequest.builder()
                 .name("John Doe")
                 .email("doe@gmail.com")
@@ -154,13 +154,13 @@ class UserControllerTest {
                 .andDo(print());
 
         // then
-        verify(userService).updateUserById(id, userRequest);
+        verify(userService).updateUserById(Integer.valueOf(id), userRequest);
     }
 
     @Test
     void updateUserById_ExceptionThrown_InvalidRequest() throws Exception {
         // given
-        String id = "1";
+        Integer id = 1;
         UserRequest userRequest = UserRequest.builder()
                 .name("  ") // only whitespaces
                 .email("doe.gmail") // invalid email address
@@ -184,7 +184,7 @@ class UserControllerTest {
     @Test
     void getUserById() throws Exception {
         // given
-        String id = "1";
+        Integer id = 1;
         UserResponse userResponse = UserResponse.builder()
                 .id(1)
                 .name("John Doe")
@@ -209,7 +209,7 @@ class UserControllerTest {
     @Test
     void getUserById_ExceptionThrown_UserNotFound() throws Exception {
         // given
-        String id = "1";
+        Integer id = 1;
 
         given(userService.getUserById(id)).willThrow(new UserNotFoundException("user not found with ID: " + id));
 

@@ -1,8 +1,6 @@
 package com.qthuy2k1.product.advice;
 
-import com.qthuy2k1.product.exception.ProductCategoryNotFoundException;
-import com.qthuy2k1.product.exception.ProductNotFoundException;
-import com.qthuy2k1.product.exception.UserNotFoundException;
+import com.qthuy2k1.product.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,41 +26,24 @@ public class ApplicationExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(ProductNotFoundException.class)
-    public Map<String, String> handleProductNotFoundException(ProductNotFoundException ex) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", ex.getMessage());
-
-        return errorMap;
+    @ExceptionHandler(NotFoundException.class)
+    public Map<String, String> handleResourceNotFoundException(NotFoundException ex) {
+        return Map.of("error", ex.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(ProductCategoryNotFoundException.class)
-    public Map<String, String> handleProductCategoryNotFoundException(ProductCategoryNotFoundException ex) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", ex.getMessage());
-
-        return errorMap;
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(NumberFormatException.class)
+    public Map<String, String> handleInvalidIdException(NumberFormatException ex) {
+        log.error(ex.getMessage());
+        return Map.of("error", "invalid id");
     }
 
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(UserNotFoundException.class)
-    public Map<String, String> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", ex.getMessage());
-
-        return errorMap;
-    }
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleUnwantedException(Exception ex) {
         log.error("Error exception class: " + ex.getCause() + " - " + ex.getMessage());
 
         // Return "unknown error" to the users instead of the actual errors message
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", "unknown error");
-
-        return errorMap;
+        return Map.of("error", "unknown error");
     }
 }

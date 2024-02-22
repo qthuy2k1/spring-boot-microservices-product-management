@@ -1,0 +1,32 @@
+server:
+  port: 12345
+
+spring:
+  application:
+    name: "user"
+  datasource:
+    username: "postgres"
+    password: "root"
+    url: jdbc:postgresql://postgres-user:5432/users_db
+  jpa:
+    properties:
+      hibernate:
+        format_sql: "true"
+    hibernate:
+      ddl-auto: update
+    show-sql: "true"
+  kafka:
+    bootstrap-servers:
+      - kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        "[spring.json.type.mapping]": user:com.qthuy2k1.user.event.UserCreated
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@eureka-server:8761/eureka
+  instance:
+    hostname: user

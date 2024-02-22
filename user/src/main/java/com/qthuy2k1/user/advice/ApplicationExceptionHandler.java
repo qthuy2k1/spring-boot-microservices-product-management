@@ -29,19 +29,15 @@ public class ApplicationExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(UserNotFoundException.class)
     public Map<String, String> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", ex.getMessage());
+        return Map.of("error", ex.getMessage());
 
-        return errorMap;
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(UserAlreadyExistsException.class)
     public Map<String, String> handleUserAlreadyExistedException(UserAlreadyExistsException ex) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", ex.getMessage());
+        return Map.of("error", ex.getMessage());
 
-        return errorMap;
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -50,9 +46,13 @@ public class ApplicationExceptionHandler {
         log.error("Error exception class: " + ex.getCause() + " - " + ex.getMessage());
 
         // Return "unknown error" to the users instead of the actual errors message
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("error", "unknown error");
+        return Map.of("error", "unknown error");
+    }
 
-        return errorMap;
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(NumberFormatException.class)
+    public Map<String, String> handleInvalidIdException(NumberFormatException ex) {
+        log.error(ex.getMessage());
+        return Map.of("error", "invalid id");
     }
 }

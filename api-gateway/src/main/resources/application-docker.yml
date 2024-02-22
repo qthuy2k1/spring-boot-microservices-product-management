@@ -1,0 +1,62 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@eureka-server:8761/eureka
+  instance:
+    preferIpAddress: true
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        ## User Service
+        - id: user
+          uri: lb://user
+          predicates:
+            - Path=/api/v1/users/**
+
+        ## Eureka Server Service
+        - id: eureka-server
+          uri: http://eureka-server:8761
+          predicates:
+            - Path=/eureka/web
+          filters:
+            - SetPath=/
+
+        ## Eureka Server Static Resource Service
+        - id: eureka-server-static-resource
+          uri: http://eureka-server:8761
+          predicates:
+            - Path=/eureka/**
+
+        ## Product Service
+        - id: product
+          uri: lb://product
+          predicates:
+            - Path=/api/v1/products/**
+
+        - id: product-category
+          uri: lb://product
+          predicates:
+            - Path=/api/v1/product-categories/**
+
+        - id: notification
+          uri: lb://notification
+          predicates:
+            - Path=/api/v1/messages
+
+        - id: order
+          uri: lb://order
+          predicates:
+            - Path=/api/v1/orders
+
+  main:
+    web-application-type: reactive
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    org.springframework.cloud.gateway: TRACE

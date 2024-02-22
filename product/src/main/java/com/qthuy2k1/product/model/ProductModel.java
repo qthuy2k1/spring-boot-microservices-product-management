@@ -1,6 +1,8 @@
 package com.qthuy2k1.product.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,10 +27,15 @@ public class ProductModel {
             generator = "product_id_sequence"
     )
     private Integer id;
+    @NotEmpty(message = "product name shouldn't be null")
     private String name;
+    @NotEmpty(message = "product description shouldn't be null")
     private String description;
+    @Min(1)
     private BigDecimal price;
+    @Min(1)
     private Integer userId;
+    @NotEmpty(message = "skuCode shouldn't be null")
     private String skuCode;
     @ManyToOne
     @JoinColumn(name = "category_id")

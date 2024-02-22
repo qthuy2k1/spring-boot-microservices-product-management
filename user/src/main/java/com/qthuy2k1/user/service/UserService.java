@@ -2,34 +2,25 @@ package com.qthuy2k1.user.service;
 
 import com.qthuy2k1.user.dto.UserRequest;
 import com.qthuy2k1.user.dto.UserResponse;
+import com.qthuy2k1.user.event.UserCreated;
 import com.qthuy2k1.user.exception.UserAlreadyExistsException;
 import com.qthuy2k1.user.exception.UserNotFoundException;
 import com.qthuy2k1.user.model.Role;
 import com.qthuy2k1.user.model.UserModel;
 import com.qthuy2k1.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, UserCreated> kafkaTemplate;
 
     public void createUser(UserRequest userRequest) throws UserAlreadyExistsException {
         // Check if user email already exists
@@ -46,7 +37,7 @@ public class UserService {
         userRepository.save(user);
 
         // Produce the message to kafka
-        kafkaTemplate.send("create-user", user.getEmail());
+        kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
     }
 
     public List<UserResponse> getAllUsers() {
@@ -54,14 +45,14 @@ public class UserService {
         return users.stream().map(this::convertUserModelToResponse).toList();
     }
 
-    public void deleteUserById(String id) throws UserNotFoundException {
+    public void deleteUserById(Integer id) throws UserNotFoundException {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
 
         userRepository.delete(user);
     }
 
-    public void updateUserById(String id, UserRequest userRequest)
+    public void updateUserById(Integer id, UserRequest userRequest)
             throws UserNotFoundException, UserAlreadyExistsException {
         // Check if user email already exists
         if (userRepository.existsByEmail(userRequest.getEmail())) {
@@ -82,14 +73,14 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public UserResponse getUserById(String id) throws UserNotFoundException {
+    public UserResponse getUserById(Integer id) throws UserNotFoundException {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
 
         return convertUserModelToResponse(user);
     }
 
-    public Boolean existsById(String id) {
+    public Boolean existsById(Integer id) {
         return userRepository.existsById(id);
     }
 

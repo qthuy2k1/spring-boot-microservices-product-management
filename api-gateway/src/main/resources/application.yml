@@ -47,6 +47,11 @@ spring:
           predicates:
             - Path=/api/v1/messages
 
+        - id: order
+          uri: lb://order
+          predicates:
+            - Path=/api/v1/orders
+
   main:
     web-application-type: reactive
 

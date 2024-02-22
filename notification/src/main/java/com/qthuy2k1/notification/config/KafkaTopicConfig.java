@@ -7,6 +7,10 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
     public NewTopic sendEmailUserCreatedTopic() {
-        return TopicBuilder.name("topic1").build();
+        return TopicBuilder.name("create-user").build();
+    }
+
+    public NewTopic sendEmailOrderCreatedTopic() {
+        return TopicBuilder.name("create-order").build();
     }
 }

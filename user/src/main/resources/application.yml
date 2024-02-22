@@ -15,17 +15,14 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: "true"
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: EMAIL_USERNAME
-    password: EMAIL_PASSWORD
-    properties:
-      mail.smtp.auth: true
-      mail.stmp.starttls.enable: true
   kafka:
     bootstrap-servers:
       - localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        "[spring.json.type.mapping]": user:com.qthuy2k1.user.event.UserCreated
 
 eureka:
   client:

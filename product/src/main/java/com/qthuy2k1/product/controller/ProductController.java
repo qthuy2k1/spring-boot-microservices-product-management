@@ -2,11 +2,9 @@ package com.qthuy2k1.product.controller;
 
 import com.qthuy2k1.product.dto.ProductRequest;
 import com.qthuy2k1.product.dto.ProductResponse;
-import com.qthuy2k1.product.exception.ProductCategoryNotFoundException;
-import com.qthuy2k1.product.exception.UserNotFoundException;
+import com.qthuy2k1.product.exception.NotFoundException;
 import com.qthuy2k1.product.service.ProductService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,21 +19,45 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @CircuitBreaker(name = "user", fallbackMethod = "fallbackMethodCreateProduct")
-//    @TimeLimiter(name = "user")
-    public ResponseEntity<String> createProduct(@RequestBody ProductRequest productRequest) throws ProductCategoryNotFoundException, UserNotFoundException {
+    public ResponseEntity<String> createProduct(@RequestBody @Valid ProductRequest productRequest) throws NotFoundException {
         productService.createProduct(productRequest);
         return new ResponseEntity<>("Success", HttpStatus.CREATED);
     }
 
-    public ResponseEntity<String> fallbackMethodCreateProduct(ProductRequest productRequest, RuntimeException runtimeException) {
-        return new ResponseEntity<>("Oops! Something went wrong!", HttpStatus.INTERNAL_SERVER_ERROR);
+    @GetMapping
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+        List<ProductResponse> products = productService.getAllProducts();
+
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> getAllProducts() {
-        return productService.getAllProducts();
+    @PutMapping("{id}")
+    public ResponseEntity<String> updateProduct(@PathVariable("id") String id, @RequestBody @Valid ProductRequest productRequest)
+            throws NotFoundException, NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        productService.updateProductById(parsedId, productRequest);
+        return new ResponseEntity<>("Success", HttpStatus.OK);
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable("id") String id)
+            throws NotFoundException, NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        productService.deleteProductById(parsedId);
+        return new ResponseEntity<>("Success", HttpStatus.OK);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<ProductResponse> getProduct(@PathVariable("id") String id)
+            throws NumberFormatException, NotFoundException {
+        Integer parsedId = Integer.valueOf(id);
+        ProductResponse product = productService.getProductById(parsedId);
+        return new ResponseEntity<>(product, HttpStatus.OK);
+    }
+
+    @GetMapping("{id}/is-exists")
+    public Boolean isProductExists(@PathVariable("id") String id) throws NumberFormatException {
+        Integer parsedId = Integer.valueOf(id);
+        return productService.isProductExists(parsedId);
     }
 }
