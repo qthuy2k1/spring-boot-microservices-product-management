@@ -92,9 +92,9 @@ services:
     ports:
       - 2181:2181
 
-  kafka:
+  broker:
     image: confluentinc/cp-kafka:latest
-    container_name: kafka
+    container_name: broker
     depends_on:
       - zookeeper
     networks:
@@ -104,17 +104,12 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
       test: [ "CMD", "bash", "-c", "unset" , "JMX_PORT" ,";" ,"kafka-topics.sh","--zookeeper","zookeeper:2181","--list" ]
-  #    healthcheck:
-  #      test: [ "CMD", "kafka-topics.sh", "--list", "--zookeeper", "zookeeper:2181" ]
-  #      interval: 5s
-  #      timeout: 10s
-  #      retries: 5
 
   eureka-server:
     image: qthuy2k1/eureka-server:latest
@@ -130,7 +125,7 @@ services:
     image: qthuy2k1/api-gateway:latest
     container_name: api-gateway
     ports:
-      - "8080:8080"
+      - "8081:8080"
     networks:
       - mynet
     depends_on:
@@ -139,22 +134,24 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     restart: on-failure
 
-  notification:
-    image: qthuy2k1/notification:latest
-    container_name: notification
+  notification-service:
+    image: qthuy2k1/notification-service:latest
+    container_name: notification-service
+    env_file:
+      - .env
     networks:
       - mynet
     depends_on:
       eureka-server:
         condition: service_started
-      kafka:
+      broker:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
-  order:
-    image: qthuy2k1/order:latest
-    container_name: order
+  order-service:
+    image: qthuy2k1/order-service:latest
+    container_name: order-service
     networks:
       - mynet
     depends_on:
@@ -162,14 +159,14 @@ services:
         condition: service_started
       postgres-order:
         condition: service_healthy
-      kafka:
+      broker:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
-  product:
-    image: qthuy2k1/product:latest
-    container_name: product
+  product-service:
+    image: qthuy2k1/product-service:latest
+    container_name: product-service
     networks:
       - mynet
     depends_on:
@@ -180,9 +177,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
-  user:
-    image: qthuy2k1/user:latest
-    container_name: user
+  user-service:
+    image: qthuy2k1/user-service:latest
+    container_name: user-service
     networks:
       - mynet
     depends_on:
@@ -190,7 +187,7 @@ services:
         condition: service_started
       postgres-user:
         condition: service_healthy
-      kafka:
+      broker:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker

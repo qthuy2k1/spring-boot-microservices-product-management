@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: order-service
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  strategy: { }
+  template:
+    metadata:
+
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: docker
+          image: qthuy2k1/order-service:latest
+          name: order-service
+          resources: { }
+          imagePullPolicy: Always
+      restartPolicy: Always
+status: { }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: order-service
+  name: order-service
+spec:
+  ports:
+    - port: 80
+      targetPort: 9093
+  selector:
+    app: order-service
+status:
+  loadBalancer: { }

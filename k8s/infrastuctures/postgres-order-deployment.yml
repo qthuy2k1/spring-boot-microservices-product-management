@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: postgres-order
+  name: postgres-order
+spec:
+  serviceName: postgres-order
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-order
+  template:
+    metadata:
+      labels:
+        app: postgres-order
+    spec:
+      containers:
+        - name: postgres-order
+          env:
+            - name: PGDATA
+              value: /data/postgres
+            - name: POSTGRES_DB
+              value: orders_db
+            - name: POSTGRES_PASSWORD
+              value: root
+            - name: POSTGRES_USER
+              value: postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          resources: { }
+          volumeMounts:
+            - mountPath: /data/postgres
+              name: postgres-order-claim0
+      restartPolicy: Always
+      volumes:
+        - name: postgres-order-claim0
+          persistentVolumeClaim:
+            claimName: postgres-order-claim0
+status: { }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: postgres-order
+  name: postgres-order
+spec:
+  ports:
+    - name: "5432"
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres-order
+status:
+  loadBalancer: { }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: postgres-order-claim0
+  name: postgres-order-claim0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+status: { }

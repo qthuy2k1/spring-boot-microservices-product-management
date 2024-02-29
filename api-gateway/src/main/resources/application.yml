@@ -12,8 +12,8 @@ spring:
     gateway:
       routes:
         ## User Service
-        - id: user
-          uri: lb://user
+        - id: user-service
+          uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
 
@@ -32,23 +32,23 @@ spring:
             - Path=/eureka/**
 
         ## Product Service
-        - id: product
-          uri: lb://product
+        - id: product-service
+          uri: lb://product-service
           predicates:
             - Path=/api/v1/products/**
 
-        - id: product-category
-          uri: lb://product
+        - id: product-category-service
+          uri: lb://product-service
           predicates:
             - Path=/api/v1/product-categories/**
 
-        - id: notification
-          uri: lb://notification
+        - id: notification-service
+          uri: lb://notification-service
           predicates:
             - Path=/api/v1/messages
 
-        - id: order
-          uri: lb://order
+        - id: order-service
+          uri: lb://order-service
           predicates:
             - Path=/api/v1/orders
 
