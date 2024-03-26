@@ -16,6 +16,7 @@ spring:
       ddl-auto: update
     show-sql: "true"
 
+## Eureka
 eureka:
   client:
     serviceUrl:
@@ -27,6 +28,16 @@ eureka:
 management.endpoints.web.exposure.include: "*"
 management.endpoint.health.show-details: always
 management.health.circuitbreakers.enabled: true
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: zipkin:9411
 
 # Resilience4j Properties
 resilience4j:

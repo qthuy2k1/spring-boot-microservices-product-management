@@ -101,6 +101,7 @@ services:
       - mynet
     ports:
       - 9092:9092
+      - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -110,6 +111,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
       test: [ "CMD", "bash", "-c", "unset" , "JMX_PORT" ,";" ,"kafka-topics.sh","--zookeeper","zookeeper:2181","--list" ]
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    networks:
+      - mynet
+    ports:
+      - "9411:9411"
+
 
   eureka-server:
     image: qthuy2k1/eureka-server:latest
@@ -125,7 +135,7 @@ services:
     image: qthuy2k1/api-gateway:latest
     container_name: api-gateway
     ports:
-      - "8081:8080"
+      - "8080:8080"
     networks:
       - mynet
     depends_on:

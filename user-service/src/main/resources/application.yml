@@ -24,9 +24,22 @@ spring:
       properties:
         "[spring.json.type.mapping]": user:com.qthuy2k1.userservice.event.UserCreated
 
+
+## Eureka
 eureka:
   client:
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
   instance:
     hostname: localhost
+    prefer-ip-address: true
+
+
+## Zipkin
+#management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: localhost:9411

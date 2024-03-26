@@ -1,13 +1,20 @@
 package com.qthuy2k1.userservice.controller;
 
+import com.qthuy2k1.userservice.dto.AuthenticationRequest;
 import com.qthuy2k1.userservice.dto.UserRequest;
 import com.qthuy2k1.userservice.dto.UserResponse;
 import com.qthuy2k1.userservice.exception.UserAlreadyExistsException;
 import com.qthuy2k1.userservice.exception.UserNotFoundException;
+import com.qthuy2k1.userservice.service.JwtService;
 import com.qthuy2k1.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,12 +24,13 @@ import java.util.List;
 @RequestMapping("api/v1/users")
 public class UserController {
     private final UserService userService;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public String signup(@RequestBody @Valid UserRequest userRequest) throws UserAlreadyExistsException {
+    @PostMapping("/register")
+    public ResponseEntity<String> signup(@RequestBody @Valid UserRequest userRequest) throws UserAlreadyExistsException {
         userService.createUser(userRequest);
-        return "success";
+        return new ResponseEntity<>("Success", HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -60,5 +68,29 @@ public class UserController {
     public Boolean existsById(@PathVariable("id") String id) throws NumberFormatException {
         Integer parsedId = Integer.valueOf(id);
         return userService.existsById(parsedId);
+    }
+
+    @GetMapping("/token")
+    public String getToken(@RequestBody AuthenticationRequest authRequest) {
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(
+                        authRequest.getEmail(), authRequest.getPassword()));
+
+        if (authentication.isAuthenticated()) {
+            return jwtService.generateToken(authRequest.getEmail());
+        } else {
+            throw new UsernameNotFoundException("invalid user request!");
+        }
+    }
+
+    @GetMapping("/validate")
+    public String validateToken(@RequestParam("token") String token) {
+        jwtService.validateToken(token);
+        return "Token is valid";
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserResponse> getUserByEmail(@PathVariable("email") String email) {
+        return new ResponseEntity<>(userService.getUserByEmail(email), HttpStatus.OK);
     }
 }

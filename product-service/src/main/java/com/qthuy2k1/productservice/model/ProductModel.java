@@ -33,8 +33,6 @@ public class ProductModel {
     private String description;
     @Min(1)
     private BigDecimal price;
-    @Min(1)
-    private Integer userId;
     @NotEmpty(message = "skuCode shouldn't be null")
     private String skuCode;
     @ManyToOne

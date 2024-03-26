@@ -15,7 +15,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: "true"
+  graphql:
+    path: /products/graphql
+    graphiql:
+      enabled: true
+      path: /products/graphiql
 
+## Eureka
 eureka:
   client:
     serviceUrl:
@@ -26,6 +32,16 @@ eureka:
 management.endpoints.web.exposure.include: "*"
 management.endpoint.health.show-details: always
 management.health.circuitbreakers.enabled: true
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: localhost:9411/api/v2/spans
 
 # Resilience4j Properties
 resilience4j:

@@ -78,7 +78,6 @@ public class ProductServiceTest {
                 .name("product 1")
                 .description("des 1")
                 .price(BigDecimal.valueOf(1))
-                .userId(1)
                 .skuCode("abc")
                 .category(productCategory)
                 .build();
@@ -120,7 +119,6 @@ public class ProductServiceTest {
                 .name("product 1")
                 .description("des 1")
                 .price(BigDecimal.valueOf(1))
-                .userId(1)
                 .skuCode("abc")
                 .category(productCategory)
                 .build();

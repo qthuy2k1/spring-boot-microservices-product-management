@@ -1,6 +1,7 @@
 package com.qthuy2k1.productservice.service;
 
 import com.qthuy2k1.productservice.dto.ProductCategoryResponse;
+import com.qthuy2k1.productservice.dto.ProductGraphQLResponse;
 import com.qthuy2k1.productservice.dto.ProductRequest;
 import com.qthuy2k1.productservice.dto.ProductResponse;
 import com.qthuy2k1.productservice.exception.NotFoundEnumException;
@@ -26,17 +27,6 @@ public class ProductService {
     public void createProduct(ProductRequest productRequest) throws NotFoundException {
         ProductModel productModel = convertToProductModel(productRequest);
 
-        // Check user exists
-        Boolean isUserExists = webClientBuilder.build().get()
-                .uri("http://user-service/api/v1/users/" + productModel.getUserId() + "/is-exists")
-                .retrieve()
-                .bodyToMono(Boolean.class)
-                .block();
-
-        if (isUserExists != null && isUserExists.equals(false)) {
-            throw new NotFoundException(NotFoundEnumException.USER);
-        }
-
         // Get the product category
         ProductCategoryResponse productCategory = productCategoryService.getProductCategoryById(productRequest.getCategoryId());
         productModel.setCategory(convertToProductCategoryModel(productCategory));
@@ -49,20 +39,14 @@ public class ProductService {
         return products.stream().map(this::convertToProductResponse).toList();
     }
 
+    public List<ProductGraphQLResponse> getAllProductsGraphQL() {
+        List<ProductModel> products = productRepository.findAll();
+        return products.stream().map(product -> convertToProductGraphQLResponse(product, convertToProductCategoryResponse(product.getCategory()))).toList();
+    }
+
     public void updateProductById(Integer id, ProductRequest productRequest) throws NotFoundException {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
-
-        // Check user exists
-        Boolean isUserExists = webClientBuilder.build().get()
-                .uri("http://user-service/api/v1/users/" + productRequest.getUserId() + "/is-exists")
-                .retrieve()
-                .bodyToMono(Boolean.class)
-                .block();
-
-        if (isUserExists != null && isUserExists.equals(false)) {
-            throw new NotFoundException(NotFoundEnumException.USER);
-        }
 
         // Get the product category
         ProductCategoryResponse productCategory = productCategoryService.getProductCategoryById(productRequest.getCategoryId());
@@ -72,7 +56,6 @@ public class ProductService {
         product.setDescription(productRequest.getDescription());
         product.setPrice(productRequest.getPrice());
         product.setSkuCode(productRequest.getSkuCode());
-        product.setUserId(productRequest.getUserId());
         product.setCategory(convertToProductCategoryModel(productCategory));
 
         productRepository.save(product);
@@ -97,12 +80,38 @@ public class ProductService {
     }
 
 
+    public ProductGraphQLResponse getProductGraphQLById(Integer id) throws NotFoundException {
+        ProductModel product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
+
+
+        return convertToProductGraphQLResponse(product, convertToProductCategoryResponse(product.getCategory()));
+    }
+
+    private ProductGraphQLResponse convertToProductGraphQLResponse(ProductModel productModel, ProductCategoryResponse productCategoryResponse) {
+        return ProductGraphQLResponse.builder()
+                .id(productModel.getId())
+                .name(productModel.getName())
+                .description(productModel.getDescription())
+                .price(productModel.getPrice())
+                .skuCode(productModel.getSkuCode())
+                .category(productCategoryResponse)
+                .build();
+    }
+
+    private ProductCategoryResponse convertToProductCategoryResponse(ProductCategoryModel productCategoryModel) {
+        return ProductCategoryResponse.builder()
+                .id(productCategoryModel.getId())
+                .name(productCategoryModel.getName())
+                .description(productCategoryModel.getDescription())
+                .build();
+    }
+
     private ProductModel convertToProductModel(ProductRequest productRequest) {
         return ProductModel.builder()
                 .name(productRequest.getName())
                 .description(productRequest.getDescription())
                 .price(productRequest.getPrice())
-                .userId(productRequest.getUserId())
                 .skuCode(productRequest.getSkuCode())
                 .build();
     }
@@ -113,7 +122,6 @@ public class ProductService {
                 .name(productModel.getName())
                 .description(productModel.getDescription())
                 .price(productModel.getPrice())
-                .userId(productModel.getUserId())
                 .categoryId(productModel.getCategory().getId())
                 .skuCode(productModel.getSkuCode())
                 .build();

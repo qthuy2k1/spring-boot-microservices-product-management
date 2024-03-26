@@ -24,6 +24,8 @@ spring:
       properties:
         "[spring.json.type.mapping]": order:com.qthuy2k1.orderservice.event.OrderPlaced
 
+
+## Eureka
 eureka:
   client:
     serviceUrl:
@@ -34,6 +36,16 @@ eureka:
 management.endpoints.web.exposure.include: "*"
 management.endpoint.health.show-details: always
 management.health.circuitbreakers.enabled: true
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: localhost:9411
 
 # Resilience4j Properties
 resilience4j:

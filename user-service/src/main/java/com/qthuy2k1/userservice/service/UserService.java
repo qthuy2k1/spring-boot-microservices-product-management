@@ -10,7 +10,9 @@ import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
     private final KafkaTemplate<String, UserCreated> kafkaTemplate;
+    private final PasswordEncoder passwordEncoder;
 
     public void createUser(UserRequest userRequest) throws UserAlreadyExistsException {
         // Check if user email already exists
@@ -30,14 +33,13 @@ public class UserService {
 
         UserModel user = convertUserRequestToModel(userRequest);
 
-        // Hash the password using BCrypt
-        String pw_hash = BCrypt.hashpw(userRequest.getPassword(), BCrypt.gensalt(10));
-        user.setPassword(pw_hash);
+        // Encode the password using BCrypt
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
         userRepository.save(user);
 
         // Produce the message to kafka
-        kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
+//        kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
     }
 
     public List<UserResponse> getAllUsers() {
@@ -82,6 +84,13 @@ public class UserService {
 
     public Boolean existsById(Integer id) {
         return userRepository.existsById(id);
+    }
+
+    public UserResponse getUserByEmail(String email) {
+        UserModel user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+
+        return convertUserModelToResponse(user);
     }
 
     private UserModel convertUserRequestToModel(UserRequest userRequest) {

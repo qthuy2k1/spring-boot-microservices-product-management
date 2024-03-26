@@ -18,3 +18,13 @@ spring:
     user:
       name: eureka
       password: password
+
+
+## Zipkin
+#management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: localhost:9411

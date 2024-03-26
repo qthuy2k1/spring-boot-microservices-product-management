@@ -24,6 +24,8 @@ spring:
       properties:
         "[spring.json.type.mapping]": user:com.qthuy2k1.userservice.event.UserCreated
 
+
+## Eureka
 eureka:
   client:
     serviceUrl:
@@ -31,3 +33,13 @@ eureka:
   instance:
     prefer-ip-address: true
     hostname: user-service
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: zipkin:9411

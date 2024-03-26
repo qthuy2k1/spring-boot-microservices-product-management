@@ -21,9 +21,20 @@ spring:
       properties:
         "[spring.json.type.mapping]": order:com.qthuy2k1.notificationservice.dto.OrderPlaced,user:com.qthuy2k1.notificationservice.dto.UserCreated
 
+## Eureka
 eureka:
   client:
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
   instance:
     hostname: localhost
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: localhost:9411

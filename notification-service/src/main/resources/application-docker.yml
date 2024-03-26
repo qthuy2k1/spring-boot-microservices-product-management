@@ -21,6 +21,8 @@ spring:
       properties:
         "[spring.json.type.mapping]": order:com.qthuy2k1.notificationservice.dto.OrderPlaced,user:com.qthuy2k1.notificationservice.dto.UserCreated
 
+
+## Eureka
 eureka:
   client:
     serviceUrl:
@@ -28,3 +30,13 @@ eureka:
   instance:
     hostname: notification-service
     prefer-ip-address: true
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: zipkin:9411

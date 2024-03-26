@@ -16,7 +16,7 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
-
+        
         ## Eureka Server Service
         - id: eureka-server
           uri: http://localhost:8761
@@ -31,16 +31,26 @@ spring:
           predicates:
             - Path=/eureka/**
 
-        ## Product Service
+        ## Product Service GraphQL
+        - id: product-graphql-service
+          uri: lb://product-service
+          predicates:
+            - Path=/products/graphiql, /products/graphql
+
+            ## Product Service
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/v1/products/**
+          filters:
+            - AuthenticationFilter
 
         - id: product-category-service
           uri: lb://product-service
           predicates:
             - Path=/api/v1/product-categories/**
+          filters:
+            - AuthenticationFilter
 
         - id: notification-service
           uri: lb://notification-service
@@ -51,6 +61,8 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/api/v1/orders
+          filters:
+            - AuthenticationFilter
 
   main:
     web-application-type: reactive
@@ -60,3 +72,13 @@ logging:
     root: INFO
     org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
     org.springframework.cloud.gateway: TRACE
+
+
+## Zipkin
+#management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: localhost:9411
