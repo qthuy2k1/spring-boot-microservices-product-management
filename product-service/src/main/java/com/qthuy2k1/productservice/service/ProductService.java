@@ -10,6 +10,10 @@ import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.model.ProductModel;
 import com.qthuy2k1.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,6 +22,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductCategoryService productCategoryService;
@@ -44,6 +49,7 @@ public class ProductService {
         return products.stream().map(product -> convertToProductGraphQLResponse(product, convertToProductCategoryResponse(product.getCategory()))).toList();
     }
 
+    @CachePut(cacheNames = "products", key = "#p0", condition = "#p0!=null")
     public void updateProductById(Integer id, ProductRequest productRequest) throws NotFoundException {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
@@ -61,6 +67,7 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @CacheEvict(cacheNames = "products", key = "#p0", condition = "#p0!=null")
     public void deleteProductById(Integer id) throws NotFoundException {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
@@ -68,14 +75,18 @@ public class ProductService {
         productRepository.delete(product);
     }
 
+    @Cacheable(cacheNames = "products", key = "#p0", condition = "#p0!=null")
     public ProductResponse getProductById(Integer id) throws NotFoundException {
+        log.info("fetching from db");
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
 
         return convertToProductResponse(product);
     }
 
+    @Cacheable(cacheNames = "products", key = "#p0", condition = "#p0!=null")
     public Boolean isProductExists(Integer id) {
+        log.info("fetching from db");
         return productRepository.existsById(id);
     }
 

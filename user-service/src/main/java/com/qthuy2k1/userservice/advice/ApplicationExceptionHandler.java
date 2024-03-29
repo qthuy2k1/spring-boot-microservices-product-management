@@ -43,7 +43,7 @@ public class ApplicationExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleUnwantedException(Exception ex) {
-        log.error("Error exception class: " + ex.getCause() + " - " + ex.getMessage());
+        log.error("Error exception class: " + ex.getClass() + " - " + ex.getCause() + " - " + ex.getMessage());
 
         // Return "unknown error" to the users instead of the actual errors message
         return Map.of("error", "unknown error");

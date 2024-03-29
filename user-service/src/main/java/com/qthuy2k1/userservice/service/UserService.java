@@ -9,6 +9,10 @@ import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -20,6 +24,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final KafkaTemplate<String, UserCreated> kafkaTemplate;
@@ -47,6 +52,7 @@ public class UserService {
         return users.stream().map(this::convertUserModelToResponse).toList();
     }
 
+    @CacheEvict(cacheNames = "users", key = "#id")
     public void deleteUserById(Integer id) throws UserNotFoundException {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
@@ -54,6 +60,7 @@ public class UserService {
         userRepository.delete(user);
     }
 
+    @CachePut(cacheNames = "users", key = "#id")
     public void updateUserById(Integer id, UserRequest userRequest)
             throws UserNotFoundException, UserAlreadyExistsException {
         // Check if user email already exists
@@ -75,17 +82,23 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public UserResponse getUserById(Integer id) throws UserNotFoundException {
+        log.info("USER ID SERVICE: " + id);
+        log.info("fetching from db");
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
 
         return convertUserModelToResponse(user);
     }
 
+    @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public Boolean existsById(Integer id) {
+        log.info("fetching from db");
         return userRepository.existsById(id);
     }
 
+    @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public UserResponse getUserByEmail(String email) {
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("user not found"));

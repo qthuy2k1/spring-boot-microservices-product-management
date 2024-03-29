@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis:/data
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -207,6 +216,7 @@ networks:
     driver: bridge
 
 volumes:
+  redis:
   postgres-db:
   pgadmin:
   postgres-user:

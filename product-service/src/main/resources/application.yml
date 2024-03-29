@@ -20,6 +20,14 @@ spring:
     graphiql:
       enabled: true
       path: /products/graphiql
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    redis:
+      cache-null-values: false
+      time-to-live: 600000
 
 ## Eureka
 eureka:

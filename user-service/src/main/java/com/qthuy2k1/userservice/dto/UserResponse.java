@@ -11,11 +11,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserResponse {
+public class UserResponse implements Serializable {
     @Min(value = 1, message = "ID must be greater than or equal to 1")
     private Integer id;
     @NotBlank(message = "your name shouldn't be null")
