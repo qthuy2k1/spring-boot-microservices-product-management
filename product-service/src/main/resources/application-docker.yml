@@ -15,6 +15,20 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: "true"
+  graphql:
+    path: /products/graphql
+    graphiql:
+      enabled: true
+      path: /products/graphiql
+  data:
+    redis:
+      host: redis
+      port: 6379
+  cache:
+    type: REDIS
+    redis:
+      cache-null-values: false
+      time-to-live: 600000
 
 ## Eureka
 eureka:

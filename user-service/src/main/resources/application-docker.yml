@@ -23,6 +23,18 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         "[spring.json.type.mapping]": user:com.qthuy2k1.userservice.event.UserCreated
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password:
+  cache:
+    type: REDIS
+    redis:
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: user
+      time-to-live: 600000
 
 
 ## Eureka

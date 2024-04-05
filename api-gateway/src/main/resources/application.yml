@@ -57,6 +57,12 @@ spring:
           predicates:
             - Path=/api/v1/messages
 
+        ## Order Service GraphQL
+        - id: order-graphql-service
+          uri: lb://order-service
+          predicates:
+            - Path=/orders/graphiql, /orders/graphql
+
         - id: order-service
           uri: lb://order-service
           predicates:

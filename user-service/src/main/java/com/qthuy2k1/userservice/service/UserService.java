@@ -44,7 +44,7 @@ public class UserService {
         userRepository.save(user);
 
         // Produce the message to kafka
-//        kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
+        kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
     }
 
     public List<UserResponse> getAllUsers() {

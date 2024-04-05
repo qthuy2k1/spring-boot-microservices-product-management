@@ -41,7 +41,10 @@ public class ProductService {
 
     public List<ProductResponse> getAllProducts() {
         List<ProductModel> products = productRepository.findAll();
-        return products.stream().map(this::convertToProductResponse).toList();
+        return products
+                .stream()
+                .map(product -> convertToProductResponse(product,
+                        convertToProductCategoryResponse(product.getCategory()))).toList();
     }
 
     public List<ProductGraphQLResponse> getAllProductsGraphQL() {
@@ -81,7 +84,7 @@ public class ProductService {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
 
-        return convertToProductResponse(product);
+        return convertToProductResponse(product, convertToProductCategoryResponse(product.getCategory()));
     }
 
     @Cacheable(cacheNames = "products", key = "#p0", condition = "#p0!=null")
@@ -94,7 +97,6 @@ public class ProductService {
     public ProductGraphQLResponse getProductGraphQLById(Integer id) throws NotFoundException {
         ProductModel product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(NotFoundEnumException.PRODUCT));
-
 
         return convertToProductGraphQLResponse(product, convertToProductCategoryResponse(product.getCategory()));
     }
@@ -127,13 +129,13 @@ public class ProductService {
                 .build();
     }
 
-    private ProductResponse convertToProductResponse(ProductModel productModel) {
+    private ProductResponse convertToProductResponse(ProductModel productModel, ProductCategoryResponse productCategoryResponse) {
         return ProductResponse.builder()
                 .id(productModel.getId())
                 .name(productModel.getName())
                 .description(productModel.getDescription())
                 .price(productModel.getPrice())
-                .categoryId(productModel.getCategory().getId())
+                .category(productCategoryResponse)
                 .skuCode(productModel.getSkuCode())
                 .build();
     }
