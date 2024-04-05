@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum NotFoundEnumException {
     USER("User not found"),
     PRODUCT("Product not found"),
-    ORDER("Order not found");
+    ORDER("Order not found"),
+    PRODUCT_CATEGORY("Product category not found");
 
     private final String message;
 
@@ -19,6 +20,7 @@ public enum NotFoundEnumException {
             case "user" -> USER;
             case "product" -> PRODUCT;
             case "order" -> ORDER;
+            case "product_category" -> PRODUCT_CATEGORY;
             default -> throw new IllegalArgumentException("Invalid resource type: " + resourceType);
         };
     }

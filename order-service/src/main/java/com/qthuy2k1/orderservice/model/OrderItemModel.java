@@ -28,7 +28,7 @@ public class OrderItemModel {
     private Integer productId;
     private Integer quantity;
     private BigDecimal price;
-    @ManyToOne
-    @JoinColumn(name = "order_id")
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private OrderModel order;
 }

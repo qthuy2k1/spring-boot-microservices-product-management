@@ -23,6 +23,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         "[spring.json.type.mapping]": order:com.qthuy2k1.orderservice.event.OrderPlaced
+  graphql:
+    path: /orders/graphql
+    graphiql:
+      enabled: true
+      path: /orders/graphiql
 
 
 ## Eureka

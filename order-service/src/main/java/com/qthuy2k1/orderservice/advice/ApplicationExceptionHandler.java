@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class ApplicationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(NumberFormatException.class)
     public Map<String, String> handleInvalidIdException(NumberFormatException ex) {
-        log.error(ex.getMessage());
+        log.error(ex.getMessage() + " - " + ex.getCause());
         return Map.of("error", "invalid id");
     }
 
@@ -44,6 +45,13 @@ public class ApplicationExceptionHandler {
     public Map<String, String> handleJsonMappingException(JsonMappingException ex) {
         log.error("Error json mapping exception: " + ex.getCause() + " - " + ex.getMessage());
         return Map.of("error", "json bad format");
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(WebClientRequestException.class)
+    public Map<String, String> handleRequestToOtherResourceException(JsonMappingException ex) {
+        log.error("Error request to other resource exception: " + ex.getCause() + " - " + ex.getMessage());
+        return Map.of("error", "internal server error");
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

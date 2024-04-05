@@ -1,0 +1,42 @@
+type UserResponse {
+    id: Int!
+    name: String!
+    email: String!
+    role: String!
+}
+
+type ProductCategoryResponse {
+    id: Int!
+    name: String!
+    description: String!
+}
+
+type ProductResponse {
+    id: Int!
+    name: String!
+    description: String!
+    price: String!
+    category: ProductCategoryResponse
+    skuCode: String
+}
+
+type OrderItemResponse {
+    id: Int!
+    product: ProductResponse!
+    quantity: Int!
+    price: String!
+}
+
+type OrderResponse {
+    id: Int!
+    user: UserResponse!
+    status: String!
+    createdAt: String
+    updatedAt: String
+    totalAmount: String
+    orderItems: [OrderItemResponse!]!
+}
+
+type Query {
+    getOrders: [OrderResponse]!
+}
