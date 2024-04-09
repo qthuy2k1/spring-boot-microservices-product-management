@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -127,15 +128,12 @@ public class OrderService {
                     }
                 }
                 """;
-//        String productGraphQLOperationName = "Product";
-//        String productGraphQLVariableName = "id";
-//        String productUri = "http://product-service/products/graphql"; // graphQL url
-//        HttpGraphQlClient graphQlClient = HttpGraphQlClient
-//                .builder(WebClient.builder().baseUrl(productUri).build())
-//                .build();
-
-        // Product Request
-        String productBaseURL = "http://product-service/api/v1/products";
+        String productGraphQLOperationName = "Product";
+        String productGraphQLVariableName = "id";
+        String productURL = "http://product-service/products/graphql"; // graphQL url
+        HttpGraphQlClient graphQlClient = HttpGraphQlClient
+                .builder(webClientBuilder.baseUrl(productURL).build())
+                .build();
 
         // User Request
         String userBaseURL = "http://user-service/api/v1/users";
@@ -147,20 +145,12 @@ public class OrderService {
             for (OrderItemResponse orderItem : orderItemModelList) {
 
                 // Request to product service using graphQL query to retrieve product response
-//                ProductResponse product = graphQlClient
-//                        .document(productGraphQLQuery)
-//                        .operationName(productGraphQLOperationName)
-//                        .variable(productGraphQLVariableName, orderItem.getProductId())
-//                        .retrieve("productById") // which is the product response
-//                        .toEntity(ProductResponse.class).block();
-
-                // Request to product service to retrieve product response
-                ProductResponse product = webClientBuilder.build()
-                        .get()
-                        .uri(productBaseURL + "/" + orderItem.getProductId())
-                        .retrieve()
-                        .bodyToMono(ProductResponse.class)
-                        .block();
+                ProductResponse product = graphQlClient
+                        .document(productGraphQLQuery)
+                        .operationName(productGraphQLOperationName)
+                        .variable(productGraphQLVariableName, orderItem.getProductId())
+                        .retrieve("productById") // which is the product response
+                        .toEntity(ProductResponse.class).block();
 
                 // throw exception if product not found
                 if (product == null) {
