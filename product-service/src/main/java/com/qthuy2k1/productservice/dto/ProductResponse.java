@@ -18,6 +18,5 @@ public class ProductResponse implements Serializable {
     private String name;
     private String description;
     private BigDecimal price;
-    private String skuCode;
     private ProductCategoryResponse category;
 }

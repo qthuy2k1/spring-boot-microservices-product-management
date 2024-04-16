@@ -1,0 +1,232 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: always
+    networks:
+      - mynet
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: qthuy2609@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - mynet
+    restart: unless-stopped
+
+  # User DB
+  postgres-user:
+    container_name: postgres-user
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: users_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-user:/data/postgres
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d users_db'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Product DB
+  postgres-product:
+    container_name: postgres-product
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: products_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-product:/data/postgres
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d products_db'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Order DB
+  postgres-order:
+    container_name: postgres-order
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: orders_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-order:/data/postgres
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d orders_db'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    networks:
+      - mynet
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+
+  broker:
+    image: confluentinc/cp-kafka:latest
+    container_name: broker
+    depends_on:
+      - zookeeper
+    networks:
+      - mynet
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "unset" , "JMX_PORT" ,";" ,"kafka-topics.sh","--zookeeper","zookeeper:2181","--list" ]
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    networks:
+      - mynet
+    ports:
+      - "9411:9411"
+
+
+  eureka-server:
+    image: qthuy2k1/eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - mynet
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+  
+  api-gateway:
+    image: qthuy2k1/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - mynet
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    restart: on-failure
+
+  notification-service:
+    image: qthuy2k1/notification-service:latest
+    container_name: notification-service
+    env_file:
+      - .env
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      broker:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  order-service:
+    image: qthuy2k1/order-service:latest
+    container_name: order-service
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-order:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  product-service:
+    image: qthuy2k1/product-service:latest
+    container_name: product-service
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-product:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  user-service:
+    image: qthuy2k1/user-service:latest
+    container_name: user-service
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-user:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  redis:
+  postgres-db:
+  pgadmin:
+  postgres-user:
+  postgres-product:
+  postgres-order:

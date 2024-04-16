@@ -33,8 +33,6 @@ public class ProductModel {
     private String description;
     @Min(1)
     private BigDecimal price;
-    @NotEmpty(message = "skuCode shouldn't be null")
-    private String skuCode;
     @ManyToOne
     @JoinColumn(name = "category_id")
     private ProductCategoryModel category;

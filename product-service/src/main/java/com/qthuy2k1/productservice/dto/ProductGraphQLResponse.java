@@ -19,5 +19,4 @@ public class ProductGraphQLResponse {
     private BigDecimal price;
     private Integer userId;
     private ProductCategoryResponse category;
-    private String skuCode;
 }
