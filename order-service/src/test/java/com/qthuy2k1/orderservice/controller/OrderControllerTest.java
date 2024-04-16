@@ -41,7 +41,7 @@ public class OrderControllerTest {
     @Test
     void createOrder() throws Exception {
         // given
-        OrderItemRequest orderItemRequest = new OrderItemRequest(1, 2, BigDecimal.valueOf(1000), null);
+        OrderItemRequest orderItemRequest = new OrderItemRequest(1, 2, BigDecimal.valueOf(1000), "abc", null);
         Set<OrderItemRequest> orderItemRequestSet = Set.of(orderItemRequest);
         OrderRequest orderRequest = new OrderRequest(1, "PENDING", orderItemRequestSet);
         String orderRequestString = objectMapper.writeValueAsString(orderRequest);

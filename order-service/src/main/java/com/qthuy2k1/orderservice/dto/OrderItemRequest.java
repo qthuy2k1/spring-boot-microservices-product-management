@@ -16,5 +16,6 @@ public class OrderItemRequest {
     private Integer productId;
     private Integer quantity;
     private BigDecimal price;
+    private String skuCode;
     private OrderModel order;
 }

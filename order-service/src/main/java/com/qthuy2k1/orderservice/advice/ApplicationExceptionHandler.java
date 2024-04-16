@@ -2,6 +2,7 @@ package com.qthuy2k1.orderservice.advice;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.qthuy2k1.orderservice.exception.NotFoundException;
+import com.qthuy2k1.orderservice.exception.ProductOutOfStock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -49,9 +50,15 @@ public class ApplicationExceptionHandler {
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(WebClientRequestException.class)
-    public Map<String, String> handleRequestToOtherResourceException(JsonMappingException ex) {
+    public Map<String, String> handleRequestToOtherResourceException(WebClientRequestException ex) {
         log.error("Error request to other resource exception: " + ex.getCause() + " - " + ex.getMessage());
         return Map.of("error", "internal server error");
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ProductOutOfStock.class)
+    public Map<String, String> handleProductOutOfStockException(ProductOutOfStock ex) {
+        return Map.of("error", "product is out of stock, please try again later");
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

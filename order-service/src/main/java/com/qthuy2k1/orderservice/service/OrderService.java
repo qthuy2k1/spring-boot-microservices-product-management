@@ -5,6 +5,7 @@ import com.qthuy2k1.orderservice.event.OrderItemPlaced;
 import com.qthuy2k1.orderservice.event.OrderPlaced;
 import com.qthuy2k1.orderservice.exception.NotFoundEnumException;
 import com.qthuy2k1.orderservice.exception.NotFoundException;
+import com.qthuy2k1.orderservice.exception.ProductOutOfStock;
 import com.qthuy2k1.orderservice.model.OrderModel;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -18,10 +19,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +45,12 @@ public class OrderService {
         Set<OrderItemRequest> orderItemsRequest = orderRequest.getOrderItem();
         Set<OrderItemPlaced> orderItemPlacedSet = new HashSet<>();
 
+        String productBaseUri = "http://product-service/api/v1/products";
         for (OrderItemRequest orderItem : orderItemsRequest) {
             // request to product service to retrieve the product name
-            String productUri = String.format("http://product-service/api/v1/products/%d", orderItem.getProductId());
+            String getProductUri = String.format("%s/%d", productBaseUri, orderItem.getProductId());
             ProductResponse product = webClientBuilder.build().get()
-                    .uri(productUri)
+                    .uri(getProductUri)
                     .retrieve()
                     .bodyToMono(ProductResponse.class)
                     .block();
@@ -94,6 +93,28 @@ public class OrderService {
             orderItem.setOrder(orderSaved);
             orderItemService.createOrderItem(orderItem);
         });
+
+        // for requesting to inventory service to check whether product is in stock or not
+        List<String> skuCodes = orderItemsRequest.stream().map(OrderItemRequest::getSkuCode).toList();
+        log.info(skuCodes.toString());
+        String isInStockUri = "http://inventory-service/api/v1/inventories";
+
+        InventoryResponse[] inventoryResponses = webClientBuilder.build()
+                .get()
+                .uri(isInStockUri, uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
+                .block();
+
+        if (inventoryResponses == null) {
+            throw new NotFoundException(NotFoundEnumException.PRODUCT);
+        }
+
+        boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
+
+        if (!allProductsInStock) {
+            throw new ProductOutOfStock();
+        }
 
         // send notification
         OrderPlaced orderPlaced = new OrderPlaced();
