@@ -1,5 +1,7 @@
 package com.qthuy2k1.productservice.service;
 
+import com.qthuy2k1.productservice.dto.ProductCategoryResponse;
+import com.qthuy2k1.productservice.dto.ProductRequest;
 import com.qthuy2k1.productservice.dto.ProductResponse;
 import com.qthuy2k1.productservice.exception.NotFoundException;
 import com.qthuy2k1.productservice.model.ProductCategoryModel;
@@ -8,6 +10,7 @@ import com.qthuy2k1.productservice.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -26,7 +30,9 @@ import static org.mockito.Mockito.verify;
 public class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
+    @Mock
     private ProductCategoryService productCategoryService;
+    @Mock
     private WebClient.Builder webClientBuilder;
     private ProductService underTest;
 
@@ -36,25 +42,36 @@ public class ProductServiceTest {
     }
 
 
-//    @Test
-//    void createProduct() throws NotFoundException {
-//        // Given
-//        ProductRequest product = new ProductRequest(
-//                "Product 1",
-//            "Product description 1",
-//                BigDecimal.valueOf(1),
-//                1,
-//                1,
-//                "abc"
-//        );
-//
-//        given()
-//
-//        // When
-//        underTest.createProduct(product);
-//
-//        // Then
-//    }
+    @Test
+    void createProduct() throws NotFoundException {
+        // Given
+        ProductRequest product = new ProductRequest(
+                "Product 1",
+                "Product description 1",
+                BigDecimal.valueOf(1),
+                1,
+                "abc",
+                1
+        );
+        ProductCategoryResponse productCategoryResponse = new ProductCategoryResponse(1, "abc", "abc");
+
+        given(productCategoryService.getProductCategoryById(product.getCategoryId())).willReturn(productCategoryResponse);
+
+
+        // When
+        underTest.createProduct(product);
+
+        // Then
+        ArgumentCaptor<ProductModel> productArgumentCaptor = ArgumentCaptor.forClass(ProductModel.class);
+        verify(productRepository).save(productArgumentCaptor.capture());
+
+        ProductModel capturedProduct = productArgumentCaptor.getValue();
+
+        assertThat(capturedProduct.getName()).isEqualTo(product.getName());
+        assertThat(capturedProduct.getDescription()).isEqualTo(product.getDescription());
+        assertThat(capturedProduct.getPrice()).isEqualTo(product.getPrice());
+//        assertThat(capturedProduct.getCategory().getId()).isEqualTo(product.getCategoryId());
+    }
 
     @Test
     void getAllProducts() {
@@ -78,7 +95,6 @@ public class ProductServiceTest {
                 .name("product 1")
                 .description("des 1")
                 .price(BigDecimal.valueOf(1))
-                .skuCode("abc")
                 .category(productCategory)
                 .build();
         given(productRepository.findById(product.getId())).willReturn(Optional.of(product));
@@ -119,7 +135,6 @@ public class ProductServiceTest {
                 .name("product 1")
                 .description("des 1")
                 .price(BigDecimal.valueOf(1))
-                .skuCode("abc")
                 .category(productCategory)
                 .build();
         given(productRepository.findById(id)).willReturn(Optional.of(productModel));
