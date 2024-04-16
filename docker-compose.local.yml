@@ -94,6 +94,28 @@ services:
       timeout: 3s
       retries: 3
 
+  # Inventory DB
+  postgres-inventory:
+    container_name: postgres-inventory
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: inventories_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-inventory:/data/postgres
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d orders_db'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
@@ -133,92 +155,6 @@ services:
     ports:
       - "9411:9411"
 
-
-  eureka-server:
-    image: qthuy2k1/eureka-server:latest
-    container_name: eureka-server
-    ports:
-      - "8761:8761"
-    networks:
-      - mynet
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-  
-  api-gateway:
-    image: qthuy2k1/api-gateway:latest
-    container_name: api-gateway
-    ports:
-      - "8080:8080"
-    networks:
-      - mynet
-    depends_on:
-      - eureka-server
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    restart: on-failure
-
-  notification-service:
-    image: qthuy2k1/notification-service:latest
-    container_name: notification-service
-    env_file:
-      - .env
-    networks:
-      - mynet
-    depends_on:
-      eureka-server:
-        condition: service_started
-      broker:
-        condition: service_healthy
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  order-service:
-    image: qthuy2k1/order-service:latest
-    container_name: order-service
-    networks:
-      - mynet
-    depends_on:
-      eureka-server:
-        condition: service_started
-      postgres-order:
-        condition: service_healthy
-      broker:
-        condition: service_healthy
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  product-service:
-    image: qthuy2k1/product-service:latest
-    container_name: product-service
-    networks:
-      - mynet
-    depends_on:
-      eureka-server:
-        condition: service_started
-      postgres-product:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  user-service:
-    image: qthuy2k1/user-service:latest
-    container_name: user-service
-    networks:
-      - mynet
-    depends_on:
-      eureka-server:
-        condition: service_started
-      postgres-user:
-        condition: service_healthy
-      broker:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
 networks:
   mynet:
     driver: bridge
@@ -230,3 +166,4 @@ volumes:
   postgres-user:
   postgres-product:
   postgres-order:
+  postgres-inventory:

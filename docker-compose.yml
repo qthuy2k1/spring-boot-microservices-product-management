@@ -94,6 +94,28 @@ services:
       timeout: 3s
       retries: 3
 
+  # Inventory DB
+  postgres-inventory:
+    container_name: postgres-inventory
+    image: postgres
+    networks:
+      - mynet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: inventories_db
+      PG_DATA: /data/postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-inventory:/data/postgres
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d orders_db'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
