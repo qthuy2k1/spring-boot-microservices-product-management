@@ -4,6 +4,7 @@ import com.qthuy2k1.userservice.exception.UserAlreadyExistsException;
 import com.qthuy2k1.userservice.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -37,7 +38,12 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public Map<String, String> handleUserAlreadyExistedException(UserAlreadyExistsException ex) {
         return Map.of("error", ex.getMessage());
+    }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(BadCredentialsException.class)
+    public Map<String, String> handleBadCredentialsException(BadCredentialsException ex) {
+        return Map.of("error", "your email or password is incorrect");
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
