@@ -3,6 +3,7 @@ package com.qthuy2k1.productservice.service;
 import com.qthuy2k1.productservice.dto.*;
 import com.qthuy2k1.productservice.exception.NotFoundEnumException;
 import com.qthuy2k1.productservice.exception.NotFoundException;
+import com.qthuy2k1.productservice.feign.IInventoryClient;
 import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.model.ProductModel;
 import com.qthuy2k1.productservice.repository.ProductRepository;
@@ -11,11 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,8 +23,7 @@ import java.util.List;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductCategoryService productCategoryService;
-    @LoadBalanced
-    private final WebClient.Builder webClientBuilder;
+    private final IInventoryClient inventoryClient;
 
     public void createProduct(ProductRequest productRequest) throws NotFoundException {
         ProductModel productModel = convertToProductModel(productRequest);
@@ -34,21 +32,15 @@ public class ProductService {
         ProductCategoryResponse productCategory = productCategoryService.getProductCategoryById(productRequest.getCategoryId());
         productModel.setCategory(convertToProductCategoryModel(productCategory));
 
-        productRepository.save(productModel);
+        ProductModel productSaved = productRepository.save(productModel);
 
+        // create inventory with quantity and product id
         InventoryRequest inventoryRequest = InventoryRequest.builder()
                 .quantity(productRequest.getQuantity())
-                .skuCode(productRequest.getSkuCode())
+                .productId(productSaved.getId())
                 .build();
 
-        webClientBuilder.build()
-                .post()
-                .uri("http://inventory-service/api/v1/inventories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(inventoryRequest)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .subscribe();
+        inventoryClient.createInventory(inventoryRequest);
     }
 
     public List<ProductResponse> getAllProducts() {
@@ -112,12 +104,25 @@ public class ProductService {
         return convertToProductGraphQLResponse(product, convertToProductCategoryResponse(product.getCategory()));
     }
 
+    public void batchInsertProduct(List<ProductRequest> productList) {
+        List<ProductModel> productModelList = new ArrayList<>();
+        for (ProductRequest product : productList) {
+            ProductCategoryResponse productCategory = productCategoryService.getProductCategoryById(product.getCategoryId());
+            ProductModel productModel = convertToProductModel(product);
+            productModel.setCategory(convertToProductCategoryModel(productCategory));
+            productModelList.add(productModel);
+        }
+
+        productRepository.saveAll(productModelList);
+    }
+
     private ProductGraphQLResponse convertToProductGraphQLResponse(ProductModel productModel, ProductCategoryResponse productCategoryResponse) {
         return ProductGraphQLResponse.builder()
                 .id(productModel.getId())
                 .name(productModel.getName())
                 .description(productModel.getDescription())
                 .price(productModel.getPrice())
+                .skuCode(productModel.getSkuCode())
                 .category(productCategoryResponse)
                 .build();
     }
@@ -135,6 +140,7 @@ public class ProductService {
                 .name(productRequest.getName())
                 .description(productRequest.getDescription())
                 .price(productRequest.getPrice())
+                .skuCode(productRequest.getSkuCode())
                 .build();
     }
 
@@ -144,6 +150,7 @@ public class ProductService {
                 .name(productModel.getName())
                 .description(productModel.getDescription())
                 .price(productModel.getPrice())
+                .skuCode(productModel.getSkuCode())
                 .category(productCategoryResponse)
                 .build();
     }

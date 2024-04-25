@@ -1,20 +1,30 @@
 package com.qthuy2k1.productservice.controller;
 
+import com.opencsv.CSVReader;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.exceptions.CsvException;
 import com.qthuy2k1.productservice.dto.ProductRequest;
 import com.qthuy2k1.productservice.dto.ProductResponse;
 import com.qthuy2k1.productservice.exception.NotFoundException;
 import com.qthuy2k1.productservice.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/products")
+@Slf4j
 public class ProductController {
     private final ProductService productService;
 
@@ -59,5 +69,18 @@ public class ProductController {
     public Boolean isProductExists(@PathVariable("id") String id) throws NumberFormatException {
         Integer parsedId = Integer.valueOf(id);
         return productService.isProductExists(parsedId);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadProductList(@RequestParam("file") MultipartFile file) throws IOException, CsvException {
+        CSVReader csvReader = new CSVReader(
+                new InputStreamReader(
+                        new ByteArrayInputStream(file.getBytes())));
+
+        CsvToBean<ProductRequest> csvToBean = new CsvToBeanBuilder(csvReader).withType(ProductRequest.class).build();
+        List<ProductRequest> productRequests = csvToBean.parse();
+
+        productService.batchInsertProduct(productRequests);
+        return ResponseEntity.ok("ok");
     }
 }

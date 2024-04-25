@@ -6,6 +6,9 @@ import com.qthuy2k1.orderservice.event.OrderPlaced;
 import com.qthuy2k1.orderservice.exception.NotFoundEnumException;
 import com.qthuy2k1.orderservice.exception.NotFoundException;
 import com.qthuy2k1.orderservice.exception.ProductOutOfStock;
+import com.qthuy2k1.orderservice.feign.IInventoryClient;
+import com.qthuy2k1.orderservice.feign.IProductClient;
+import com.qthuy2k1.orderservice.feign.IUserClient;
 import com.qthuy2k1.orderservice.model.OrderModel;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -19,7 +22,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,12 +37,13 @@ public class OrderService {
     private final KafkaTemplate<String, OrderPlaced> kafkaTemplate;
     @LoadBalanced
     private final WebClient.Builder webClientBuilder;
+    private final IUserClient userClient;
+    private final IProductClient productClient;
+    private final IInventoryClient inventoryClient;
 
     public void createOrder(OrderRequest orderRequest) throws NotFoundException {
         // Check user exists
-        String userUri = String.format("http://%s/api/v1/%s/%s/is-exists",
-                "user-service", "users", orderRequest.getUserId().toString());
-        Boolean isUserExists = checkExists(userUri);
+        Boolean isUserExists = userClient.existsById(orderRequest.getUserId().toString());
 
         if (isUserExists != null && isUserExists.equals(false)) {
             throw new NotFoundException(NotFoundEnumException.USER);
@@ -45,34 +52,25 @@ public class OrderService {
         Set<OrderItemRequest> orderItemsRequest = orderRequest.getOrderItem();
         Set<OrderItemPlaced> orderItemPlacedSet = new HashSet<>();
 
-        String productBaseUri = "http://product-service/api/v1/products";
-        for (OrderItemRequest orderItem : orderItemsRequest) {
+        orderItemsRequest.forEach(orderItem -> {
             // request to product service to retrieve the product name
-            String getProductUri = String.format("%s/%d", productBaseUri, orderItem.getProductId());
-            ProductResponse product = webClientBuilder.build().get()
-                    .uri(getProductUri)
-                    .retrieve()
-                    .bodyToMono(ProductResponse.class)
-                    .block();
+            ProductResponse product = productClient.getProduct(orderItem.getProductId().toString()).getBody();
 
             // throw exception if product not found
             if (product == null) {
                 throw new NotFoundException(NotFoundEnumException.PRODUCT);
             }
 
-            log.info(product.toString());
-
             // update the product price to order item request
             orderItem.setPrice(new BigDecimal(product.getPrice()));
-
-            // add to orderItemPlaced Set
             OrderItemPlaced orderItemPlaced = new OrderItemPlaced();
             orderItemPlaced.setProductName(product.getName());
             orderItemPlaced.setPrice(new BigDecimal(product.getPrice()));
             orderItemPlaced.setQuantity(orderItem.getQuantity());
 
+            // add to orderItemPlaced Set
             orderItemPlacedSet.add(orderItemPlaced);
-        }
+        });
 
         OrderModel orderModel = convertOrderRequestToModel(orderRequest);
 
@@ -89,32 +87,20 @@ public class OrderService {
 
         // store all order item to db
         orderRequest.getOrderItem().forEach(orderItem -> {
+            // for requesting to inventory service to check whether product is in stock or not
+            InventoryResponse inventoryResponses = inventoryClient.isInStock(orderItem.getQuantity(), orderItem.getProductId());
+            if (inventoryResponses == null) {
+                throw new NotFoundException(NotFoundEnumException.PRODUCT);
+            }
+
+            if (!inventoryResponses.isInStock()) {
+                throw new ProductOutOfStock();
+            }
+
             // store order item
             orderItem.setOrder(orderSaved);
             orderItemService.createOrderItem(orderItem);
         });
-
-        // for requesting to inventory service to check whether product is in stock or not
-        List<String> skuCodes = orderItemsRequest.stream().map(OrderItemRequest::getSkuCode).toList();
-        log.info(skuCodes.toString());
-        String isInStockUri = "http://inventory-service/api/v1/inventories";
-
-        InventoryResponse[] inventoryResponses = webClientBuilder.build()
-                .get()
-                .uri(isInStockUri, uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
-                .retrieve()
-                .bodyToMono(InventoryResponse[].class)
-                .block();
-
-        if (inventoryResponses == null) {
-            throw new NotFoundException(NotFoundEnumException.PRODUCT);
-        }
-
-        boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isInStock);
-
-        if (!allProductsInStock) {
-            throw new ProductOutOfStock();
-        }
 
         // send notification
         OrderPlaced orderPlaced = new OrderPlaced();
@@ -156,9 +142,6 @@ public class OrderService {
                 .builder(webClientBuilder.baseUrl(productURL).build())
                 .build();
 
-        // User Request
-        String userBaseURL = "http://user-service/api/v1/users";
-
         for (OrderModel orderModel : orderModelList) {
             List<OrderItemGraphQLResponse> orderItemGraphQLResponses = new ArrayList<>();
 
@@ -181,12 +164,7 @@ public class OrderService {
             }
 
             // request to user service to retrieve the user response
-            String userUri = String.format("%s/%d", userBaseURL, orderModel.getUserId());
-            UserResponse user = webClientBuilder.build().get()
-                    .uri(userUri)
-                    .retrieve()
-                    .bodyToMono(UserResponse.class)
-                    .block();
+            UserResponse user = userClient.getUser(orderModel.getUserId().toString());
 
             // throw exception if user not found
             if (user == null) {

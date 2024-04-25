@@ -1,6 +1,9 @@
 package com.qthuy2k1.productservice.advice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.productservice.exception.ClientErrorException;
 import com.qthuy2k1.productservice.exception.NotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +56,21 @@ public class ApplicationExceptionHandler {
     public Map<String, String> handleNoResourceFoundException(NoResourceFoundException ex) {
         log.error("ERROR NoResourceFoundException: " + ex.getMessage());
         return Map.of("error", "resource not found");
+    }
+
+    @ExceptionHandler(ClientErrorException.class)
+    public Map<String, String> handleFeignStatusException(ClientErrorException e, HttpServletResponse response) {
+        response.setStatus(e.getStatusCode());
+        String message;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> responseMap = mapper.readValue(e.getMessage(), Map.class);
+            message = responseMap.get("error");
+        } catch (IOException ex) {
+            message = "unknown error";
+            System.err.println("Error parsing JSON response: " + e.getMessage());
+        }
+        return Map.of("error", message);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

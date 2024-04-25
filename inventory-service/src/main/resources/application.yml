@@ -24,3 +24,9 @@ eureka:
 
 server:
   port: 0
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0

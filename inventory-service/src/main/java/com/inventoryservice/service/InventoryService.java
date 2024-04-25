@@ -5,12 +5,11 @@ import com.inventoryservice.dto.InventoryResponse;
 import com.inventoryservice.model.InventoryModel;
 import com.inventoryservice.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,21 +21,28 @@ public class InventoryService {
         inventoryRepository.save(
                 InventoryModel.builder()
                         .quantity(inventoryRequest.getQuantity())
-                        .skuCode(inventoryRequest.getSkuCode())
+                        .productId(inventoryRequest.getProductId())
                         .build()
         );
     }
 
     @Transactional(readOnly = true)
-    @SneakyThrows
-    public List<InventoryResponse> isInStock(List<String> skuCode) {
-        log.info(skuCode.toString());
-        return inventoryRepository.findBySkuCodeIn(skuCode).stream()
-                .map(inventory ->
-                        InventoryResponse.builder()
-                                .skuCode(inventory.getSkuCode())
-                                .isInStock(inventory.getQuantity() > 0)
-                                .build()
-                ).toList();
+    public InventoryResponse isInStock(Integer quantity, Integer productId) {
+        Optional<InventoryModel> inventoryOptional = inventoryRepository.findByProductId(productId);
+        if (inventoryOptional.isEmpty()) {
+            return InventoryResponse.builder()
+                    .isInStock(false)
+                    .build();
+        }
+
+        if (inventoryOptional.get().getQuantity() - quantity <= 0) {
+            return InventoryResponse.builder()
+                    .isInStock(false)
+                    .build();
+        }
+
+        return InventoryResponse.builder()
+                .isInStock(true)
+                .build();
     }
 }

@@ -2,7 +2,6 @@ package com.inventoryservice.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,8 +24,8 @@ public class InventoryModel {
             generator = "inventory_id_sequence"
     )
     private Integer id;
-    @NotEmpty(message = "the skuCode shouldn't be null")
-    private String skuCode;
+    @Min(value = 1, message = "the product id should be greater than 0")
+    private Integer productId;
     @Min(value = 0, message = "the quantity should be greater than 0")
     private Integer quantity;
 }

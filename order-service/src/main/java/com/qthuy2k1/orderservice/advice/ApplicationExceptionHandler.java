@@ -1,8 +1,11 @@
 package com.qthuy2k1.orderservice.advice;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.orderservice.exception.ClientErrorException;
 import com.qthuy2k1.orderservice.exception.NotFoundException;
 import com.qthuy2k1.orderservice.exception.ProductOutOfStock;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +65,21 @@ public class ApplicationExceptionHandler {
         return Map.of("error", "product is out of stock, please try again later");
     }
 
+    @ExceptionHandler(ClientErrorException.class)
+    public Map<String, String> handleFeignStatusException(ClientErrorException e, HttpServletResponse response) {
+        response.setStatus(e.getStatusCode());
+        String message;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> responseMap = mapper.readValue(e.getMessage(), Map.class);
+            message = responseMap.get("error");
+        } catch (IOException ex) {
+            message = "unknown error";
+            System.err.println("Error parsing JSON response: " + e.getMessage());
+        }
+        return Map.of("error", message);
+    }
+
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleUnwantedException(Exception ex) {
@@ -69,4 +88,5 @@ public class ApplicationExceptionHandler {
         // Return "unknown error" to the users instead of the actual errors message
         return Map.of("error", "unknown error");
     }
+
 }

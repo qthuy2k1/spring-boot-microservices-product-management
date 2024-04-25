@@ -2,6 +2,7 @@ package com.qthuy2k1.productservice.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,8 @@ public class ProductModel {
     private String description;
     @Min(1)
     private BigDecimal price;
+    @NotBlank(message = "the skuCode shouldn't be blank")
+    private String skuCode;
     @ManyToOne
     @JoinColumn(name = "category_id")
     private ProductCategoryModel category;

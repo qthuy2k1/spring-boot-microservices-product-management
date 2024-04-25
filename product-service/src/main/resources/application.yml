@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 19292
 
 spring:
   application:
@@ -11,6 +11,8 @@ spring:
   jpa:
     properties:
       hibernate:
+        jdbc:
+          batch_size: 4
         format_sql: "true"
     hibernate:
       ddl-auto: update
@@ -35,6 +37,7 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
+    enabled: false
   instance:
     hostname: localhost
     prefer-ip-address: true
@@ -49,9 +52,6 @@ management:
   tracing:
     sampling:
       probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: localhost:9411/api/v2/spans
 
 # Resilience4j Properties
 resilience4j:
@@ -71,3 +71,5 @@ resilience4j:
   #Resilience4J Retry Properties
   retry.instances.user.max-attempts: 3
   retry.instances.user.wait-duration: 5
+
+
