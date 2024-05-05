@@ -107,13 +107,26 @@ public class ProductService {
     public void batchInsertProduct(List<ProductRequest> productList) {
         List<ProductModel> productModelList = new ArrayList<>();
         for (ProductRequest product : productList) {
+            // create inventory with quantity and product id
             ProductCategoryResponse productCategory = productCategoryService.getProductCategoryById(product.getCategoryId());
             ProductModel productModel = convertToProductModel(product);
             productModel.setCategory(convertToProductCategoryModel(productCategory));
             productModelList.add(productModel);
         }
 
-        productRepository.saveAll(productModelList);
+        List<ProductModel> productSavedList = productRepository.saveAll(productModelList);
+        if (productSavedList.size() == productList.size()) {
+            for (int i = 0; i < productSavedList.size(); i++) {
+                // create inventory with quantity and product id
+                InventoryRequest inventoryRequest = InventoryRequest.builder()
+                        .quantity(productList.get(i).getQuantity())
+                        .productId(productSavedList.get(i).getId())
+                        .build();
+                inventoryClient.createInventory(inventoryRequest);
+            }
+        } else {
+            throw new RuntimeException("the size between request and response product list isn't the same");
+        }
     }
 
     private ProductGraphQLResponse convertToProductGraphQLResponse(ProductModel productModel, ProductCategoryResponse productCategoryResponse) {

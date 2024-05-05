@@ -1,5 +1,5 @@
 server:
-  port: 19292
+  port: 0
 
 spring:
   application:
@@ -37,7 +37,7 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
-    enabled: false
+  #    enabled: false
   instance:
     hostname: localhost
     prefer-ip-address: true
