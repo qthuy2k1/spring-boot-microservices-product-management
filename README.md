@@ -74,17 +74,17 @@ The app defines following CRUD APIs.
 
 ### Products
 
-| Query    | Url               | Description        | Sample Valid Request Body |
-|----------|-------------------|--------------------|---------------------------|
-| Query    | /products/graphql | Get product by id  |                           |
-| Query    | /products/graphql | Get all products   |                           |
-| Mutation | /products/graphql | Create new product |                           |
+| Query    | Url               | Description        | Sample Valid Request Body     |
+|----------|-------------------|--------------------|-------------------------------|
+| Query    | /products/graphql | Get product by id  | [JSON](#productgetgraphql)    |
+| Query    | /products/graphql | Get all products   | [JSON](#producgetallgraphql)  |
+| Mutation | /products/graphql | Create new product | [JSON](#productcreategraphql) |
 
 ### Orders
 
 | Query | Url             | Description    | Sample Valid Request Body |
 |-------|-----------------|----------------|---------------------------|
-| Query | /orders/graphql | Get all orders |                           |
+| Query | /orders/graphql | Get all orders | [JSON](#ordergetgraphql)  |
 
 Test them using postman or any other rest client.
 
