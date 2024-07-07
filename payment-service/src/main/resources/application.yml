@@ -1,0 +1,36 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: payment-service
+  data:
+    mongodb:
+      authentication-database: admin
+      username: root
+      password: example
+      database: payments_db
+      port: 27017
+      host: localhost
+
+
+## Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@localhost:8761/eureka
+  #    enabled: false
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+
+## Zipkin
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
