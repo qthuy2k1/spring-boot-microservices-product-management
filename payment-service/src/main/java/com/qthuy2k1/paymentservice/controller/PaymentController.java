@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/payments")
 @RequiredArgsConstructor
 public class PaymentController {
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);

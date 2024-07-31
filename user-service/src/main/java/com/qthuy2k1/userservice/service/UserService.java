@@ -1,95 +1,112 @@
 package com.qthuy2k1.userservice.service;
 
-import com.qthuy2k1.userservice.dto.UserRequest;
-import com.qthuy2k1.userservice.dto.UserResponse;
+import com.qthuy2k1.userservice.dto.request.UserRequest;
+import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
+import com.qthuy2k1.userservice.dto.response.UserResponse;
+import com.qthuy2k1.userservice.enums.ErrorCode;
+import com.qthuy2k1.userservice.enums.RoleEnum;
 import com.qthuy2k1.userservice.event.UserCreated;
-import com.qthuy2k1.userservice.exception.UserAlreadyExistsException;
-import com.qthuy2k1.userservice.exception.UserNotFoundException;
-import com.qthuy2k1.userservice.model.Role;
+import com.qthuy2k1.userservice.exception.AppException;
+import com.qthuy2k1.userservice.mapper.UserMapper;
 import com.qthuy2k1.userservice.model.UserModel;
+import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    private final UserRepository userRepository;
-    private final KafkaTemplate<String, UserCreated> kafkaTemplate;
-    private final PasswordEncoder passwordEncoder;
+    UserRepository userRepository;
+    KafkaTemplate<String, UserCreated> kafkaTemplate;
+    PasswordEncoder passwordEncoder;
+    UserMapper userMapper;
+    RoleRepository roleRepository;
 
-    public void createUser(UserRequest userRequest) throws UserAlreadyExistsException {
+
+    public UserResponse createUser(UserRequest userRequest) {
         // Check if user email already exists
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new UserAlreadyExistsException("user already exists with email: " + userRequest.getEmail());
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        UserModel user = convertUserRequestToModel(userRequest);
+        UserModel user = userMapper.toUser(userRequest);
 
         // Encode the password using BCrypt
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        var role = roleRepository.findById(RoleEnum.USER.name())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND_SERVER));
+        user.setRoles(new HashSet<>(List.of(role)));
 
-        userRepository.save(user);
+        user = userRepository.save(user);
 
         // Produce the message to kafka
         kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
+
+        return userMapper.toUserResponse(user);
     }
 
     public List<UserResponse> getAllUsers() {
         List<UserModel> users = userRepository.findAll();
-        return users.stream().map(this::convertUserModelToResponse).toList();
+
+        return users.stream().map(userMapper::toUserResponse).toList();
     }
 
     @CacheEvict(cacheNames = "users", key = "#id")
-    public void deleteUserById(Integer id) throws UserNotFoundException {
+    public void deleteUserById(Integer id) {
         UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         userRepository.delete(user);
     }
 
-    @CachePut(cacheNames = "users", key = "#id")
-    public void updateUserById(Integer id, UserRequest userRequest)
-            throws UserNotFoundException, UserAlreadyExistsException {
-        // Check if user email already exists
-        if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new UserAlreadyExistsException("user already exists with email: " + userRequest.getEmail());
-        }
-
+    @CachePut(cacheNames = "users", key = "#p0", condition = "#p0!=null")
+    public UserResponse updateUserById(Integer id, UserUpdateRequest userRequest) {
         UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // Update the user information based on the UserRequest
-        user.setName(userRequest.getName());
-        user.setEmail(userRequest.getEmail());
 
-        // Hash the password using BCrypt
-        String pw_hash = BCrypt.hashpw(userRequest.getPassword(), BCrypt.gensalt(10));
-        user.setPassword(pw_hash);
+        userMapper.updateUser(user, userRequest);
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-        userRepository.save(user);
+
+        var roles = roleRepository.findAllById(userRequest.getRoles());
+        user.setRoles(new HashSet<>(roles));
+
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
-    public UserResponse getUserById(Integer id) throws UserNotFoundException {
-        log.info("USER ID SERVICE: " + id);
-        log.info("fetching from db");
+    public UserResponse getUserById(Integer id) {
         UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("user not found with ID: " + id));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        return convertUserModelToResponse(user);
+        return userMapper.toUserResponse(user);
+    }
+
+    @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
+    public UserResponse getMyInfo() {
+        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserModel user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return userMapper.toUserResponse(user);
     }
 
     @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
@@ -103,23 +120,6 @@ public class UserService {
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("user not found"));
 
-        return convertUserModelToResponse(user);
-    }
-
-    private UserModel convertUserRequestToModel(UserRequest userRequest) {
-        return UserModel.builder()
-                .name(userRequest.getName())
-                .email(userRequest.getEmail())
-                .role(Role.USER)
-                .build();
-    }
-
-    private UserResponse convertUserModelToResponse(UserModel user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .build();
+        return userMapper.toUserResponse(user);
     }
 }

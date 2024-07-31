@@ -14,6 +14,7 @@ services:
       - redis:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -111,7 +112,7 @@ services:
       - postgres-inventory:/data/postgres
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d orders_db'" ]
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d inventories_db'" ]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -155,6 +156,37 @@ services:
     ports:
       - "9411:9411"
 
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-payment:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - mynet
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "9911:8081"
+    depends_on:
+      - mongodb
+    volumes:
+      - mongo-payment:/data/db
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    networks:
+      - mynet
+
 networks:
   mynet:
     driver: bridge
@@ -167,3 +199,4 @@ volumes:
   postgres-product:
   postgres-order:
   postgres-inventory:
+  mongo-payment:

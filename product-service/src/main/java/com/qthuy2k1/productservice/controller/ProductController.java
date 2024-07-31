@@ -3,16 +3,18 @@ package com.qthuy2k1.productservice.controller;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.exceptions.CsvException;
-import com.qthuy2k1.productservice.dto.ProductRequest;
-import com.qthuy2k1.productservice.dto.ProductResponse;
-import com.qthuy2k1.productservice.exception.NotFoundException;
+import com.qthuy2k1.productservice.dto.request.ProductRequest;
+import com.qthuy2k1.productservice.dto.response.ApiResponse;
+import com.qthuy2k1.productservice.dto.response.MessageResponse;
+import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.service.ProductService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,56 +25,68 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/products")
+@RequestMapping("/products")
 @Slf4j
 public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<String> createProduct(@RequestBody @Valid ProductRequest productRequest) throws NotFoundException {
-        productService.createProduct(productRequest);
-        return new ResponseEntity<>("Success", HttpStatus.CREATED);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequest productRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<ProductResponse>builder()
+                        .result(productService.createProduct(productRequest)).build()
+        );
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProducts() {
         List<ProductResponse> products = productService.getAllProducts();
-
-        return new ResponseEntity<>(products, HttpStatus.OK);
+        return ResponseEntity.ok().body(
+                ApiResponse.<List<ProductResponse>>builder()
+                        .result(products)
+                        .build()
+        );
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<String> updateProduct(@PathVariable("id") String id, @RequestBody @Valid ProductRequest productRequest)
-            throws NotFoundException, NumberFormatException {
-        Integer parsedId = Integer.valueOf(id);
-        productService.updateProductById(parsedId, productRequest);
-        return new ResponseEntity<>("Success", HttpStatus.OK);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable("id") @Positive int id, @RequestBody @Valid ProductRequest productRequest) {
+        return ResponseEntity.ok().body(
+                ApiResponse.<ProductResponse>builder()
+                        .result(productService.updateProductById(id, productRequest))
+                        .build()
+        );
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable("id") String id)
-            throws NotFoundException, NumberFormatException {
-        Integer parsedId = Integer.valueOf(id);
-        productService.deleteProductById(parsedId);
-        return new ResponseEntity<>("Success", HttpStatus.OK);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable("id") @Positive int id) {
+        productService.deleteProductById(id);
+        return ResponseEntity.ok().body(
+                ApiResponse.<String>builder()
+                        .result(MessageResponse.SUCCESS)
+                        .build()
+        );
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable("id") String id)
-            throws NumberFormatException, NotFoundException {
-        Integer parsedId = Integer.valueOf(id);
-        ProductResponse product = productService.getProductById(parsedId);
-        return new ResponseEntity<>(product, HttpStatus.OK);
+    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable("id") @Positive int id) {
+        return ResponseEntity.ok().body(
+                ApiResponse.<ProductResponse>builder()
+                        .result(productService.getProductById(id))
+                        .build()
+        );
     }
 
     @GetMapping("{id}/is-exists")
-    public Boolean isProductExists(@PathVariable("id") String id) throws NumberFormatException {
-        Integer parsedId = Integer.valueOf(id);
-        return productService.isProductExists(parsedId);
+    public Boolean isProductExists(@PathVariable("id") @Positive int id) {
+        return productService.isProductExists(id);
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadProductList(@RequestParam("file") MultipartFile file) throws IOException, CsvException {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> uploadProductList(@RequestParam("file") MultipartFile file) throws IOException {
         CSVReader csvReader = new CSVReader(
                 new InputStreamReader(
                         new ByteArrayInputStream(file.getBytes())));
@@ -81,6 +95,10 @@ public class ProductController {
         List<ProductRequest> productRequests = csvToBean.parse();
 
         productService.batchInsertProduct(productRequests);
-        return ResponseEntity.ok("ok");
+        return ResponseEntity.ok().body(
+                ApiResponse.<String>builder()
+                        .result(MessageResponse.SUCCESS)
+                        .build()
+        );
     }
 }

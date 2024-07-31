@@ -34,10 +34,15 @@ spring:
       use-key-prefix: true
       key-prefix: user
       time-to-live: 600000
+  jwt:
+    signerKey: "iYcJS25OwsLDyqgCWgDQ/s7w4QqpU9A15MWniRM5Y0bj73JO/hlXksVLr3fnJt/y"
+    valid-duration: 3600 # in second
+    refreshable-duration: 36000
 
 ## Eureka
 eureka:
   client:
+    #    enabled: false
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
   instance:

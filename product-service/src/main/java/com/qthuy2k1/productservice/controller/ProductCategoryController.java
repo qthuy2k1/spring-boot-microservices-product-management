@@ -1,30 +1,42 @@
 package com.qthuy2k1.productservice.controller;
 
-import com.qthuy2k1.productservice.dto.ProductCategoryRequest;
-import com.qthuy2k1.productservice.dto.ProductCategoryResponse;
+import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
+import com.qthuy2k1.productservice.dto.response.ApiResponse;
+import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
 import com.qthuy2k1.productservice.service.ProductCategoryService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/product-categories")
+@RequestMapping("/product-categories")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductCategoryController {
-    private final ProductCategoryService productCategoryService;
+    ProductCategoryService productCategoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public String createProductCategory(@RequestBody ProductCategoryRequest productCategoryRequest) {
-        productCategoryService.createProductCategory(productCategoryRequest);
-        return "Success";
+    public ResponseEntity<ApiResponse<ProductCategoryResponse>> createProductCategory(@RequestBody ProductCategoryRequest productCategoryRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<ProductCategoryResponse>builder()
+                        .result(productCategoryService.createProductCategory(productCategoryRequest))
+                        .build()
+        );
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductCategoryResponse> getAllProductCategories() {
-        return productCategoryService.getAllProductCategories();
+    public ResponseEntity<ApiResponse<List<ProductCategoryResponse>>> getAllProductCategories() {
+        return ResponseEntity.ok().body(
+                ApiResponse.<List<ProductCategoryResponse>>builder()
+                        .result(productCategoryService.getAllProductCategories())
+                        .build()
+        );
     }
 }

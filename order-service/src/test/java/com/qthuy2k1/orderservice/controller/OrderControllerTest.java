@@ -1,8 +1,8 @@
 package com.qthuy2k1.orderservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qthuy2k1.orderservice.dto.OrderItemRequest;
-import com.qthuy2k1.orderservice.dto.OrderRequest;
+import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
+import com.qthuy2k1.orderservice.dto.request.OrderRequest;
 import com.qthuy2k1.orderservice.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

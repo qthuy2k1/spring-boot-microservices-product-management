@@ -2,11 +2,11 @@ package com.qthuy2k1.productservice.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qthuy2k1.productservice.dto.ProductCategoryResponse;
-import com.qthuy2k1.productservice.dto.ProductRequest;
-import com.qthuy2k1.productservice.dto.ProductResponse;
-import com.qthuy2k1.productservice.exception.NotFoundEnumException;
-import com.qthuy2k1.productservice.exception.NotFoundException;
+import com.qthuy2k1.productservice.dto.request.ProductRequest;
+import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
+import com.qthuy2k1.productservice.dto.response.ProductResponse;
+import com.qthuy2k1.productservice.enums.ErrorCode;
+import com.qthuy2k1.productservice.exception.AppException;
 import com.qthuy2k1.productservice.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -174,7 +174,7 @@ public class ProductControllerTest {
     void deleteProductById_ExceptionThrown_ProductNotFound() throws Exception {
         // given
         int id = 1;
-        doThrow(new NotFoundException(NotFoundEnumException.PRODUCT))
+        doThrow(new AppException(ErrorCode.PRODUCT_NOT_FOUND))
                 .when(productService).deleteProductById(id);
 
         // when
@@ -277,7 +277,7 @@ public class ProductControllerTest {
         // given
         Integer id = 1;
 
-        given(productService.getProductById(id)).willThrow(new NotFoundException(NotFoundEnumException.PRODUCT));
+        given(productService.getProductById(id)).willThrow(new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // when
         String error = "{\"error\":\"Product not found\"}";

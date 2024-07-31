@@ -1,13 +1,10 @@
 package com.qthuy2k1.productservice.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
@@ -17,6 +14,7 @@ import java.math.BigDecimal;
 @Builder
 @Entity
 @Table(name = "products_tbl")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductModel {
     @Id
     @SequenceGenerator(
@@ -27,16 +25,16 @@ public class ProductModel {
             strategy = GenerationType.SEQUENCE,
             generator = "product_id_sequence"
     )
-    private Integer id;
-    @NotEmpty(message = "product name shouldn't be null")
-    private String name;
-    @NotEmpty(message = "product description shouldn't be null")
-    private String description;
-    @Min(1)
-    private BigDecimal price;
-    @NotBlank(message = "the skuCode shouldn't be blank")
-    private String skuCode;
+    Integer id;
+    @NotBlank(message = "PRODUCT_NAME_BLANK")
+    String name;
+    @NotBlank(message = "PRODUCT_DESCRIPTION_BLANK")
+    String description;
+    @PositiveOrZero(message = "PRODUCT_PRICE_MIN")
+    BigDecimal price;
+    @NotBlank(message = "PRODUCT_SKUCODE_BLANK")
+    String skuCode;
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private ProductCategoryModel category;
+    ProductCategoryModel category;
 }

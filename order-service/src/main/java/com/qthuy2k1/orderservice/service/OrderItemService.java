@@ -1,65 +1,33 @@
 package com.qthuy2k1.orderservice.service;
 
-import com.qthuy2k1.orderservice.dto.OrderItemGraphQLResponse;
-import com.qthuy2k1.orderservice.dto.OrderItemRequest;
-import com.qthuy2k1.orderservice.dto.OrderItemResponse;
-import com.qthuy2k1.orderservice.dto.ProductResponse;
+import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
+import com.qthuy2k1.orderservice.dto.response.OrderItemResponse;
+import com.qthuy2k1.orderservice.mapper.OrderItemMapper;
 import com.qthuy2k1.orderservice.model.OrderItemModel;
 import com.qthuy2k1.orderservice.repository.OrderItemRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderItemService {
-    private final OrderItemRepository orderItemRepository;
+    OrderItemRepository orderItemRepository;
+    OrderItemMapper orderItemMapper;
+
 
     public OrderItemModel createOrderItem(OrderItemRequest orderItemRequest) {
-        OrderItemModel orderItemModel = convertOrderItemRequestToModel(orderItemRequest);
+        OrderItemModel orderItemModel = orderItemMapper.toOrderItem(orderItemRequest);
 
         return orderItemRepository.save(orderItemModel);
     }
 
     public List<OrderItemResponse> getOrderItemsByOrderId(Integer orderId) {
         List<OrderItemModel> orderItemModels = orderItemRepository.findAllByOrderId(orderId);
-        return orderItemModels.stream().map(this::convertOrderItemModelToResponse).toList();
-    }
-
-    private OrderItemModel convertOrderItemRequestToModel(OrderItemRequest orderItemRequest) {
-        return OrderItemModel.builder()
-                .productId(orderItemRequest.getProductId())
-                .price(orderItemRequest.getPrice())
-                .quantity(orderItemRequest.getQuantity())
-                .order(orderItemRequest.getOrder())
-                .build();
-    }
-
-    public OrderItemResponse convertOrderItemModelToResponse(OrderItemModel orderItemModel) {
-        return OrderItemResponse.builder()
-                .id(orderItemModel.getId())
-                .productId(orderItemModel.getProductId())
-                .price(orderItemModel.getPrice())
-                .quantity(orderItemModel.getQuantity())
-                .build();
-    }
-
-    public OrderItemGraphQLResponse convertOrderItemModelToGraphQLResponse(OrderItemModel orderItemModel, ProductResponse productResponse) {
-        return OrderItemGraphQLResponse.builder()
-                .id(orderItemModel.getId())
-                .product(productResponse)
-                .price(String.valueOf(orderItemModel.getPrice()))
-                .quantity(orderItemModel.getQuantity())
-                .build();
-    }
-
-    public OrderItemGraphQLResponse convertOrderItemResponseToGraphQLResponse(OrderItemResponse orderItem, ProductResponse productResponse) {
-        return OrderItemGraphQLResponse.builder()
-                .id(orderItem.getId())
-                .product(productResponse)
-                .price(String.valueOf(orderItem.getPrice()))
-                .quantity(orderItem.getQuantity())
-                .build();
+        return orderItemModels.stream().map(orderItemMapper::toOrderItemResponse).toList();
     }
 }

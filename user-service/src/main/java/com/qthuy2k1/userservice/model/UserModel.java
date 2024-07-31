@@ -4,10 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "users_tbl")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserModel {
     @Id
     @SequenceGenerator(
@@ -25,16 +26,17 @@ public class UserModel {
             strategy = GenerationType.SEQUENCE,
             generator = "user_id_sequence"
     )
-    private Integer id;
-    @NotEmpty(message = "your name shouldn't be null")
-    private String name;
-    @Email(message = "invalid email address")
-    private String email;
-    @Size(min = 6, message = "{validation.name.size.too_short}")
-    @NotEmpty(message = "your password shouldn't be null")
-    private String password;
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    Integer id;
+    @NotEmpty(message = "USERNAME_NULL")
+    String name;
+    @Email(message = "EMAIL_INVALID")
+    String email;
+    @Size(min = 6, message = "PASSWORD_MIN")
+    @NotEmpty(message = "PASSWORD_NULL")
+    String password;
+
+    @ManyToMany
+    Set<Role> roles;
 
     public UserModel(String name, String email, String password) {
         this.name = name;

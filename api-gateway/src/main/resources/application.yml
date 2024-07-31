@@ -5,6 +5,9 @@ eureka:
   instance:
     preferIpAddress: true
 
+app:
+  api-prefix: /api/v1
+
 spring:
   application:
     name: api-gateway
@@ -15,8 +18,18 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/v1/users/**
-        
+            - Path=${app.api-prefix}/users/**
+          filters:
+            - StripPrefix=2
+
+        ## Auth Service
+        - id: auth-service
+          uri: lb://user-service
+          predicates:
+            - Path=${app.api-prefix}/auth/**
+          filters:
+            - StripPrefix=2
+
         ## Eureka Server Service
         - id: eureka-server
           uri: http://localhost:8761
@@ -31,31 +44,26 @@ spring:
           predicates:
             - Path=/eureka/**
 
-        ## Product Service GraphQL
+        # Product Service GraphQL
         - id: product-graphql-service
           uri: lb://product-service
           predicates:
             - Path=/products/graphiql, /products/graphql
 
-            ## Product Service
+        ## Product Service
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/api/v1/products/**
+            - Path=${app.api-prefix}/products/**
           filters:
-            - AuthenticationFilter
+            - StripPrefix=2
 
         - id: product-category-service
           uri: lb://product-service
           predicates:
-            - Path=/api/v1/product-categories/**
+            - Path=${app.api-prefix}/product-categories/**
           filters:
-            - AuthenticationFilter
-
-        - id: notification-service
-          uri: lb://notification-service
-          predicates:
-            - Path=/api/v1/messages
+            - StripPrefix=2
 
         ## Order Service GraphQL
         - id: order-graphql-service
@@ -66,19 +74,26 @@ spring:
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/v1/orders
+            - Path=${app.api-prefix}/orders
           filters:
-            - AuthenticationFilter
+            - StripPrefix=2
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=${app.api-prefix}/payments/**
+            - StripPrefix=2
 
   main:
     web-application-type: reactive
 
 logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
   level:
     root: INFO
-    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    #    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
     org.springframework.cloud.gateway: TRACE
-
 
 ## Zipkin
 management:
