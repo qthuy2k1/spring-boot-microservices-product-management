@@ -26,6 +26,10 @@ import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
@@ -149,12 +153,11 @@ public class OrderService {
     public List<OrderGraphQLResponse> getAllOrdersGraphQL() {
         List<OrderGraphQLResponse> orderGraphQLResponsesList = new ArrayList<>();
         List<OrderModel> orderModelList = orderRepository.findAll();
-        log.info(orderModelList.toString());
 
         // Product GraphQL Request
         String productGraphQLQuery = """
-                query Product($id: Int!){
-                    productById(id: $id) {
+                query Product($ids: [Int!]!) {
+                    getProductGraphQLByListId(ids: $ids) {
                         id
                         name
                         description
@@ -168,11 +171,24 @@ public class OrderService {
                     }
                 }
                 """;
+
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+
+        if (!StringUtils.hasText(authHeader)) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
         String productGraphQLOperationName = "Product";
-        String productGraphQLVariableName = "id";
+        String productGraphQLVariableName = "ids";
         String productURL = "http://product-service/products/graphql"; // graphQL url
         HttpGraphQlClient graphQlClient = HttpGraphQlClient
-                .builder(webClientBuilder.baseUrl(productURL).build())
+                .builder(webClientBuilder
+                        .baseUrl(productURL)
+                        .defaultHeader("Authorization", authHeader)
+                        .build())
                 .build();
 
         for (OrderModel orderModel : orderModelList) {
@@ -180,23 +196,31 @@ public class OrderService {
 
             List<OrderItemModel> orderItemModelList =
                     orderItemRepository.findAllByOrderId(orderModel.getId());
+            List<Integer> productIdList = orderItemModelList.stream().map(OrderItemModel::getProductId).toList();
+
+            // Request to product service using graphQL query to retrieve product response
+            List<ProductResponse> productList = graphQlClient
+                    .document(productGraphQLQuery)
+                    .operationName(productGraphQLOperationName)
+                    .variable(productGraphQLVariableName, productIdList)
+                    .retrieve("getProductGraphQLByListId") // which is the product response
+                    .toEntityList(ProductResponse.class).block();
+
+            // throw exception if product not found
+            if (CollectionUtils.isEmpty(productList)) {
+                throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+
             for (OrderItemModel orderItem : orderItemModelList) {
-
-                // Request to product service using graphQL query to retrieve product response
-                ProductResponse product = graphQlClient
-                        .document(productGraphQLQuery)
-                        .operationName(productGraphQLOperationName)
-                        .variable(productGraphQLVariableName, orderItem.getProductId())
-                        .retrieve("productById") // which is the product response
-                        .toEntity(ProductResponse.class).block();
-
-                // throw exception if product not found
-                if (product == null) {
-                    throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
-                }
-
                 OrderItemGraphQLResponse orderItemGraphQLResponse = orderItemMapper.toOrderItemGraphQLResponse(orderItem);
-                orderItemGraphQLResponse.setProduct(product);
+                orderItemGraphQLResponse.setProduct(
+                        productList
+                                .stream()
+                                .filter(
+                                        product -> product.getId().equals(orderItem.getProductId()))
+                                .findFirst()
+                                .orElse(null)
+                );
                 orderItemGraphQLResponsesList.add(orderItemGraphQLResponse);
             }
 
@@ -211,6 +235,8 @@ public class OrderService {
             if (user == null || user.getResult() == null) {
                 throw new AppException(ErrorCode.USER_NOT_FOUND);
             }
+
+            log.info(user.getResult().toString());
 
             // convert order item list to order item set
             OrderGraphQLResponse orderGraphQLResponse = orderMapper.toOrderGraphQLResponse(orderModel);

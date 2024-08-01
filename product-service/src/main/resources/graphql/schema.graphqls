@@ -28,4 +28,5 @@ type Mutation {
 type Query {
     getProducts: [Product]
     productById(id: Int!): Product
+    getProductGraphQLByListId(ids: [Int]): [Product]
 }

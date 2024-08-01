@@ -21,9 +21,7 @@ public enum ErrorCode {
     INVALID_ID(1007, "invalid id", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1008, "unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1009, "you do not have permission", HttpStatus.FORBIDDEN),
-    FEIGN_ERROR(1010, "client feign error", HttpStatus.INTERNAL_SERVER_ERROR),
-
-    ;
+    FEIGN_ERROR(1010, "client feign error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     int code;
     String message;

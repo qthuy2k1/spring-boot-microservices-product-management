@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +112,12 @@ public class ProductService {
 
 
         return productMapper.toProductGraphQLResponse(product);
+    }
+
+
+    public List<ProductGraphQLResponse> getProductGraphQLByListId(Set<Integer> ids) {
+        List<ProductModel> productList = productRepository.findAllById(ids);
+        return productList.stream().map(productMapper::toProductGraphQLResponse).toList();
     }
 
     public void batchInsertProduct(List<ProductRequest> productList) {

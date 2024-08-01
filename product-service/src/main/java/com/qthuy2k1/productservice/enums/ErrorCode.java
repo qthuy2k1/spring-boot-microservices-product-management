@@ -28,7 +28,7 @@ public enum ErrorCode {
     PRODUCT_CATEGORY_ID_MIN(1014, "product category id should be greater than 0", HttpStatus.BAD_REQUEST),
     PRODUCT_QUANTITY_MIN(1015, "product quantity should be greater than 0 or equal 0", HttpStatus.BAD_REQUEST),
     PRODUCT_ID_MIN(1016, "product id should be greater than 0", HttpStatus.BAD_REQUEST),
-    ;
+    INVALID_REQUEST_VARIABLE(1011, "invalid request variable", HttpStatus.BAD_REQUEST);
 
     int code;
     String message;
