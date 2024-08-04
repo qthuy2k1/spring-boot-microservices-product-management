@@ -8,7 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserModel, Integer> {
-    //    @Query("SELECT COUNT(*) > 0 FROM User u WHERE u.email = :email")
     boolean existsByEmail(String email);
 
     Optional<UserModel> findByEmail(String email);

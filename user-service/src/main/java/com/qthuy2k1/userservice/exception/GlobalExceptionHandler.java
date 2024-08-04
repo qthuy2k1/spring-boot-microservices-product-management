@@ -17,7 +17,7 @@ import java.util.Objects;
 public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidArgument(MethodArgumentNotValidException ex) {
-        String enumKey = Objects.requireNonNull(ex.getFieldError()).getDefaultMessage();
+        String enumKey = Objects.requireNonNull(ex.getFieldError().getDefaultMessage());
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
 
         // if validation exception is configured wrong
@@ -34,6 +34,7 @@ public class GlobalExceptionHandler {
                         .build()
         );
     }
+
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {

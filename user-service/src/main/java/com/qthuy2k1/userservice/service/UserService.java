@@ -8,6 +8,7 @@ import com.qthuy2k1.userservice.enums.RoleEnum;
 import com.qthuy2k1.userservice.event.UserCreated;
 import com.qthuy2k1.userservice.exception.AppException;
 import com.qthuy2k1.userservice.mapper.UserMapper;
+import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
@@ -20,12 +21,12 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -50,9 +51,9 @@ public class UserService {
 
         // Encode the password using BCrypt
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-        var role = roleRepository.findById(RoleEnum.USER.name())
+        Role role = roleRepository.findById(RoleEnum.USER.name())
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND_SERVER));
-        user.setRoles(new HashSet<>(List.of(role)));
+        user.setRoles(Set.of(role));
 
         user = userRepository.save(user);
 
@@ -64,7 +65,6 @@ public class UserService {
 
     public List<UserResponse> getAllUsers() {
         List<UserModel> users = userRepository.findAll();
-
         return users.stream().map(userMapper::toUserResponse).toList();
     }
 
@@ -72,7 +72,6 @@ public class UserService {
     public void deleteUserById(Integer id) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         userRepository.delete(user);
     }
 
@@ -81,12 +80,15 @@ public class UserService {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (!user.getEmail().equals(userRequest.getEmail())
+                && userRepository.existsByEmail(userRequest.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
 
         userMapper.updateUser(user, userRequest);
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-
-        var roles = roleRepository.findAllById(userRequest.getRoles());
+        List<Role> roles = roleRepository.findAllById(userRequest.getRoles());
         user.setRoles(new HashSet<>(roles));
 
         return userMapper.toUserResponse(userRepository.save(user));
@@ -96,30 +98,26 @@ public class UserService {
     public UserResponse getUserById(Integer id) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         return userMapper.toUserResponse(user);
     }
 
     @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public UserResponse getMyInfo() {
-        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         return userMapper.toUserResponse(user);
     }
 
     @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public Boolean existsById(Integer id) {
-        log.info("fetching from db");
         return userRepository.existsById(id);
     }
 
     @Cacheable(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public UserResponse getUserByEmail(String email) {
         UserModel user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("user not found"));
-
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserResponse(user);
     }
 }
