@@ -9,7 +9,6 @@ import com.qthuy2k1.productservice.dto.response.MessageResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.service.ProductService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -51,7 +50,7 @@ public class ProductController {
 
     @PutMapping("{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable("id") @Positive int id, @RequestBody @Valid ProductRequest productRequest) {
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable("id") int id, @RequestBody @Valid ProductRequest productRequest) {
         return ResponseEntity.ok().body(
                 ApiResponse.<ProductResponse>builder()
                         .result(productService.updateProductById(id, productRequest))
@@ -61,7 +60,7 @@ public class ProductController {
 
     @DeleteMapping("{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable("id") @Positive int id) {
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable("id") int id) {
         productService.deleteProductById(id);
         return ResponseEntity.ok().body(
                 ApiResponse.<String>builder()
@@ -71,7 +70,7 @@ public class ProductController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable("id") @Positive int id) {
+    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable("id") int id) {
         return ResponseEntity.ok().body(
                 ApiResponse.<ProductResponse>builder()
                         .result(productService.getProductById(id))
@@ -80,7 +79,7 @@ public class ProductController {
     }
 
     @GetMapping("{id}/is-exists")
-    public Boolean isProductExists(@PathVariable("id") @Positive int id) {
+    public Boolean isProductExists(@PathVariable("id") int id) {
         return productService.isProductExists(id);
     }
 
