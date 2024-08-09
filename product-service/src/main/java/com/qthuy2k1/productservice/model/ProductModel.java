@@ -37,4 +37,7 @@ public class ProductModel {
     @ManyToOne
     @JoinColumn(name = "category_id")
     ProductCategoryModel category;
+    String thumbnail;
+    String url;
 }
+

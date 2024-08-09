@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,4 +19,6 @@ public class ProductResponse implements Serializable {
     private BigDecimal price;
     private String skuCode;
     private ProductCategoryResponse category;
+    private String url;
+    private String thumbnail;
 }

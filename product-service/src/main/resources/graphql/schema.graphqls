@@ -5,12 +5,14 @@ type ProductCategory {
 }
 
 type Product {
-    id: Int!
+    id: String!
     name: String!
     description: String!
     price: Float!
     category: ProductCategory
     skuCode: String
+    thumbnail: String
+    url: String
 }
 
 input ProductRequest {

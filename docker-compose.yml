@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   redis:
     image: redis:6.2-alpine
@@ -111,7 +109,7 @@ services:
       - postgres-inventory:/data/postgres
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d orders_db'" ]
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U postgres -d inventories_db'" ]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -155,25 +153,37 @@ services:
     ports:
       - "9411:9411"
 
-  mongodb:
+  mongo-payment:
     image: mongo
-    container_name: mongodb
+    container_name: mongo-payment
     restart: always
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-payment:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - mynet
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   mongo-express:
     image: mongo-express
     restart: always
+    networks:
+      - mynet
     ports:
-      - "9091:9091"
+      - "9111:9091"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo-payment:27017/
       ME_CONFIG_BASICAUTH: false
   
   
@@ -262,6 +272,33 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
+  inventory-service:
+    image: qthuy2k1/inventory-service:latest
+    container_name: inventory-service
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      postgres-inventory:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  payment-service:
+    image: qthuy2k1/payment-service:latest
+    container_name: payment-service
+    networks:
+      - mynet
+    depends_on:
+      eureka-server:
+        condition: service_started
+      mongo-payment:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+
 networks:
   mynet:
     driver: bridge
@@ -274,3 +311,4 @@ volumes:
   postgres-product:
   postgres-order:
   postgres-inventory:
+  mongo-payment:

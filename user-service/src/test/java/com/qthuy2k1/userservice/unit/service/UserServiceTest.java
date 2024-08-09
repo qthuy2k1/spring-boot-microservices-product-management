@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.unit.service;
 
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
@@ -11,6 +11,7 @@ import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
+import com.qthuy2k1.userservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -262,7 +263,7 @@ class UserServiceTest {
 
         given(userRepository.findById(id)).willReturn(Optional.of(userModel));
         given(userRepository.existsByEmail(userRequest.getEmail())).willReturn(true);
-        
+
         // then
         assertThatThrownBy(() ->
                 underTest.updateUserById(id, userRequest)).

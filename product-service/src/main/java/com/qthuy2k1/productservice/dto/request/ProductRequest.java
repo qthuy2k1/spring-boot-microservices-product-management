@@ -26,4 +26,6 @@ public class ProductRequest {
     String skuCode;
     @PositiveOrZero(message = "PRODUCT_QUANTITY_MIN")
     Integer quantity;
+    String thumbnail;
+    String url;
 }

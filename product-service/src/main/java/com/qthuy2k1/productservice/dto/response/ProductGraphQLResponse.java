@@ -17,7 +17,8 @@ public class ProductGraphQLResponse {
     private String name;
     private String description;
     private BigDecimal price;
-    private Integer userId;
     private String skuCode;
     private ProductCategoryResponse category;
+    private String url;
+    private String thumb;
 }

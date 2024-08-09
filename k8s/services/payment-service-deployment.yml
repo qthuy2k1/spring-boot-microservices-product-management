@@ -2,25 +2,25 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: user-service
-  name: user-service
+    app: payment-service
+  name: payment-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: user-service
+      app: payment-service
   strategy: { }
   template:
     metadata:
       labels:
-        app: user-service
+        app: payment-service
     spec:
       containers:
         - env:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
-          image: qthuy2k1/user-service:latest
-          name: user-service
+          image: qthuy2k1/payment-service:latest
+          name: payment-service
           resources: { }
           imagePullPolicy: Always
       restartPolicy: Always
@@ -30,13 +30,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: user-service
-  name: user-service
+    app: payment-service
+  name: payment-service
 spec:
   ports:
     - port: 80
-      targetPort: 9091
+      targetPort: 9096
   selector:
-    app: user-service
+    app: payment-service
 status:
   loadBalancer: { }

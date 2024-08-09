@@ -30,13 +30,22 @@ The app defines following CRUD APIs.
 
 ### Users
 
-| Method | Url                    | Description         | Sample Valid Request Body |
-|--------|------------------------|---------------------|---------------------------|
-| GET    | /api/v1/users/{id}     | Get user info by id |                           |
-| GET    | /api/v1/users/validate | Get token           |                           |
-| POST   | /api/v1/users/register | Create user         | [JSON](#usercreate)       |
-| PUT    | /api/v1/users/{id}     | Update user         | [JSON](#userupdate)       |
-| DELETE | /api/v1/users/{id}     | Delete user         |                           |
+| Method | Url                    | Description          | Sample Valid Request Body |
+|--------|------------------------|----------------------|---------------------------|
+| GET    | /api/v1/users/{id}     | Get user info by id  |                           |
+| GET    | /api/v1/users/my-info  | Get user signed info |                           |
+| POST   | /api/v1/users/register | Create user          | [JSON](#usercreate)       |
+| PUT    | /api/v1/users/{id}     | Update user          | [JSON](#userupdate)       |
+| DELETE | /api/v1/users/{id}     | Delete user          |                           |
+
+### Auth
+
+| Method | Url                        | Description       | Sample Valid Request Body |
+|--------|----------------------------|-------------------|---------------------------|
+| POST   | /api/v1/auth/token         | Get token         | [JSON]()                  |
+| POST   | /api/v1/auth/introspect    | Validate token    | [JSON]()                  |
+| POST   | /api/v1/auth/refresh-token | Get refresh token | [JSON]()                  |
+| POST   | /api/v1/auth/logout        | Logout            | [JSON]()                  |
 
 ### Products
 
@@ -94,13 +103,29 @@ Test them using postman or any other rest client.
 
 ```json
 {
-  "name": "John Doe",
-  "password": "password",
-  "email": "john.doe@gmail.com"
+  "code": 1000,
+  "result": {
+    "name": "John Doe",
+    "password": "password",
+    "email": "john.doe@gmail.com"
+  }
 }
 ```
 
-##### <a id="validate">Log In -> /api/v1/users/validate</a>
+##### <a id="userupdate">Update User -> /api/v1/users/{id}</a>
+
+```json
+{
+  "code": 1000,
+  "result": {
+    "name": "12311",
+    "email": "112@gmail.com",
+    "password": "123123"
+  }
+}
+```
+
+##### <a id="gettoken">Log In -> /api/v1/auth/token </a>
 
 ```json
 {
@@ -109,13 +134,27 @@ Test them using postman or any other rest client.
 }
 ```
 
-##### <a id="userupdate">Update User -> /api/v1/users/{id}</a>
+##### <a id="introspect">Introspect -> /api/v1/auth/introspect</a>
 
 ```json
 {
-  "name": "12311",
-  "email": "112@gmail.com",
-  "password": "123123"
+  "token": "token here"
+}
+```
+
+##### <a id="refreshtoken">Get refresh token -> /api/v1/auth/refresh-token</a>
+
+```json
+{
+  "token": "token here"
+}
+```
+
+##### <a id="logout">Logout -> /api/v1/auth/logout</a>
+
+```json
+{
+  "token": "token here"
 }
 ```
 
@@ -123,12 +162,15 @@ Test them using postman or any other rest client.
 
 ```json
 {
-  "name": "Iphone 12",
-  "description": "iphone 12",
-  "price": 1000,
-  "categoryId": 1,
-  "skuCode": "abc",
-  "quantity": "4"
+  "code": 1000,
+  "result": {
+    "name": "Iphone 12",
+    "description": "iphone 12",
+    "price": 1000,
+    "categoryId": 1,
+    "skuCode": "abc",
+    "quantity": "4"
+  }
 }
 ```
 
@@ -136,12 +178,15 @@ Test them using postman or any other rest client.
 
 ```json
 {
-  "name": "Iphone 12",
-  "description": "iphone 12",
-  "price": 1000,
-  "categoryId": 1,
-  "skuCode": "abc",
-  "quantity": "4"
+  "code": 1000,
+  "result": {
+    "name": "Iphone 12",
+    "description": "iphone 12",
+    "price": 1000,
+    "categoryId": 1,
+    "skuCode": "abc",
+    "quantity": "4"
+  }
 }
 ```
 
@@ -159,8 +204,11 @@ Test them using postman or any other rest client.
 
 ```json
 {
-  "name": "Category 1",
-  "description": "Description of category 1"
+  "code": 1000,
+  "result": {
+    "name": "Category 1",
+    "description": "Description of category 1"
+  }
 }
 ```
 
@@ -168,14 +216,17 @@ Test them using postman or any other rest client.
 
 ```json
 {
-  "userId": 1,
-  "orderItem": [
-    {
-      "productId": 2,
-      "quantity": 2,
-      "skuCode": "abc"
-    }
-  ]
+  "code": 1000,
+  "result": {
+    "userId": 1,
+    "orderItem": [
+      {
+        "productId": 2,
+        "quantity": 2,
+        "skuCode": "abc"
+      }
+    ]
+  }
 }
 ```
 

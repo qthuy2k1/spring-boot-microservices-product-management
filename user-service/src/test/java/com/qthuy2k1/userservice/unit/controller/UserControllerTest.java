@@ -1,7 +1,8 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.unit.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.userservice.controller.UserController;
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
 import com.qthuy2k1.userservice.dto.response.*;

@@ -5,7 +5,6 @@ import com.qthuy2k1.orderservice.dto.response.ApiResponse;
 import com.qthuy2k1.orderservice.dto.response.OrderResponse;
 import com.qthuy2k1.orderservice.service.OrderService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,7 +29,7 @@ public class OrderController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<String> updateOrder(@PathVariable("id") @Positive int id, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<String> updateOrder(@PathVariable("id") int id, @RequestBody OrderRequest orderRequest) {
         orderService.updateOrder(id, orderRequest);
         return new ResponseEntity<>("Success", HttpStatus.OK);
     }

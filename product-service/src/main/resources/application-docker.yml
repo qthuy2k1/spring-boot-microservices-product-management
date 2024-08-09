@@ -2,33 +2,8 @@ server:
   port: 9092
 
 spring:
-  application:
-    name: product-service
   datasource:
-    username: "postgres"
-    password: "root"
     url: jdbc:postgresql://postgres-product:5432/products_db
-  jpa:
-    properties:
-      hibernate:
-        format_sql: "true"
-    hibernate:
-      ddl-auto: update
-    show-sql: "true"
-  graphql:
-    path: /products/graphql
-    graphiql:
-      enabled: true
-      path: /products/graphiql
-  data:
-    redis:
-      host: redis
-      port: 6379
-  cache:
-    type: REDIS
-    redis:
-      cache-null-values: false
-      time-to-live: 600000
 
 ## Eureka
 eureka:
@@ -38,36 +13,3 @@ eureka:
   instance:
     hostname: product-service
     prefer-ip-address: true
-
-management.endpoints.web.exposure.include: "*"
-management.endpoint.health.show-details: always
-management.health.circuitbreakers.enabled: true
-
-
-## Zipkin
-management:
-  tracing:
-    sampling:
-      probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: zipkin:9411
-
-# Resilience4j Properties
-resilience4j:
-  circuitbreaker:
-    instances:
-      user:
-        registerHealthIndicator: true
-        eventConsumerBufferSize: 10
-        slidingWindowType: COUNT_BASED
-        slidingWindowSize: 5
-        failureRateThreshold: 50
-        waitDurationInOpenState: 5s
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-  #Resilience4J Timeout Properties
-  timelimiter.instances.user.timeout-duration: 3s
-  #Resilience4J Retry Properties
-  retry.instances.user.max-attempts: 3
-  retry.instances.user.wait-duration: 5

@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-inventory:5432/inventories_db
+
+## Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@eureka-server:8761/eureka
+  instance:
+    hostname: inventory-service
+    prefer-ip-address: true
+
+server:
+  port: 9095

@@ -33,10 +33,8 @@ import java.util.List;
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     IdentityService identityService;
     ObjectMapper objectMapper;
-
     @NonFinal
     String[] publicEndpoints = {"/auth/.*", "/users/register"};
-
     @Value("${app.api-prefix}")
     @NonFinal
     String apiPrefix;
@@ -56,7 +54,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         String token = authHeader.getFirst().replace("Bearer ", "");
-        log.info(token);
 
         return identityService.introspect(token).flatMap(response -> {
             if (response.getResult().isValid()) {

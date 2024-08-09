@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "INVENTORY-SERVICE", configuration = {AuthenticationRequestInterceptor.class})
 public interface InventoryClient {
-    @PostMapping("/api/v1/inventories")
+    @PostMapping("/inventories")
     void createInventory(@RequestBody InventoryRequest inventoryRequest);
 }

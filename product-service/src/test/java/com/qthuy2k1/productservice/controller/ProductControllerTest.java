@@ -107,7 +107,7 @@ public class ProductControllerTest {
     void createProduct_ExceptionThrown_InvalidRequest() throws Exception {
         // given
         ProductRequest productRequest = ProductRequest.builder()
-                .name("  ") // only whitespaces
+                .name("abc")
                 .description("  ") // only whitespaces
                 .price(BigDecimal.valueOf(1000))
                 .skuCode("abc")
@@ -265,7 +265,7 @@ public class ProductControllerTest {
         // given
         int id = 1;
         ProductRequest productRequest = ProductRequest.builder()
-                .name("  ") // only whitespaces
+                .name("abc")
                 .description("  ") // only whitespaces
                 .price(BigDecimal.valueOf(1000))
                 .skuCode("abc")

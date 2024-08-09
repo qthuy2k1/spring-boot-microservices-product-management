@@ -12,7 +12,6 @@ spec:
   strategy: { }
   template:
     metadata:
-
       labels:
         app: order-service
     spec:

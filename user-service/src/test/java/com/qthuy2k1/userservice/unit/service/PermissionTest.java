@@ -1,10 +1,11 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.unit.service;
 
 import com.qthuy2k1.userservice.dto.request.PermissionRequest;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
 import com.qthuy2k1.userservice.mapper.PermissionMapper;
 import com.qthuy2k1.userservice.model.Permission;
 import com.qthuy2k1.userservice.repository.PermissionRepository;
+import com.qthuy2k1.userservice.service.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

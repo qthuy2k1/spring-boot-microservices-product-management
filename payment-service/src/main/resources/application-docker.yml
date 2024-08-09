@@ -1,0 +1,22 @@
+server:
+  port: 9096
+
+spring:
+  application:
+    name: payment-service
+  data:
+    mongodb:
+      authentication-database: admin
+      username: root
+      password: example
+      database: payments_db
+      port: 27017
+      host: mongo-payment
+## Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@eureka-server:8761/eureka
+  instance:
+    hostname: payment-service
+    prefer-ip-address: true

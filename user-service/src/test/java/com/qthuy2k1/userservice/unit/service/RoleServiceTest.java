@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.unit.service;
 
 import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
@@ -7,6 +7,7 @@ import com.qthuy2k1.userservice.model.Permission;
 import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.repository.PermissionRepository;
 import com.qthuy2k1.userservice.repository.RoleRepository;
+import com.qthuy2k1.userservice.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

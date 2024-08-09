@@ -1,12 +1,12 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.unit.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qthuy2k1.userservice.dto.request.RoleRequest;
+import com.qthuy2k1.userservice.controller.PermissionController;
+import com.qthuy2k1.userservice.dto.request.PermissionRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
-import com.qthuy2k1.userservice.dto.response.RoleResponse;
-import com.qthuy2k1.userservice.service.RoleService;
+import com.qthuy2k1.userservice.service.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +24,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -35,10 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = RoleController.class)
+@WebMvcTest(controllers = PermissionController.class)
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
-public class RoleControllerTest {
+public class PermissionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -46,9 +45,9 @@ public class RoleControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @MockBean
-    private RoleService roleService;
+    private PermissionService permissionService;
     @InjectMocks
-    private RoleController roleController;
+    private PermissionController permissionController;
 
     @BeforeEach
     void setup() {
@@ -58,95 +57,76 @@ public class RoleControllerTest {
     @Test
     void create() throws Exception {
         // given
-        RoleRequest roleRequest = RoleRequest.builder()
-                .name("USER")
-                .description("user description")
-                .permissions(Set.of("READ_DATA"))
+        PermissionRequest permissionRequest = PermissionRequest.builder()
+                .name("READ_DATA")
+                .description("read data description")
                 .build();
         PermissionResponse permissionResponse = PermissionResponse.builder()
                 .name("READ_DATA")
                 .description("read data description")
                 .build();
 
-        RoleResponse roleResponse = RoleResponse.builder()
-                .name("USER")
-                .description("user description")
-                .permissions(Set.of(permissionResponse))
-                .build();
-
-        given(roleService.create(any())).willReturn(roleResponse);
+        given(permissionService.create(any())).willReturn(permissionResponse);
 
         // when
-        ApiResponse<RoleResponse> apiResponse = ApiResponse.<RoleResponse>builder()
-                .result(roleResponse)
+        ApiResponse<PermissionResponse> apiResponse = ApiResponse.<PermissionResponse>builder()
+                .result(permissionResponse)
                 .build();
 
-        mockMvc.perform(post("/roles")
+        mockMvc.perform(post("/permissions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(roleRequest)))
+                        .content(objectMapper.writeValueAsString(permissionRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
                 .andDo(print());
 
         // then
-        then(roleService).should().create(any());
+        then(permissionService).should().create(any());
     }
 
     @Test
     void getAll() throws Exception {
         // given
-        List<RoleResponse> roles = new ArrayList<>();
         PermissionResponse permissionResponse = PermissionResponse.builder()
                 .name("READ_DATA")
                 .description("read data description")
                 .build();
 
-        roles.add(
-                RoleResponse.builder()
-                        .name("USER")
-                        .description("user description")
-                        .permissions(Set.of(permissionResponse))
-                        .build()
-        );
-        roles.add(
-                RoleResponse.builder()
-                        .name("ADMIN")
-                        .description("admin description")
-                        .permissions(Set.of(permissionResponse))
-                        .build()
-        );
-        given(roleService.getAll()).willReturn(roles);
+        List<PermissionResponse> permissions = new ArrayList<>();
+        permissions.add(permissionResponse);
+
+        given(permissionService.getAll()).willReturn(permissions);
 
         // when
-        ApiResponse<List<RoleResponse>> apiResponse = ApiResponse.<List<RoleResponse>>builder()
-                .result(roles)
+        ApiResponse<List<PermissionResponse>> apiResponse = ApiResponse.<List<PermissionResponse>>builder()
+                .result(permissions)
                 .build();
 
-        mockMvc.perform(get("/roles"))
+        mockMvc.perform(get("/permissions"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
 
         // then
-        then(roleService).should().getAll();
+        then(permissionService).should().getAll();
     }
 
     @Test
     void delete() throws Exception {
         // given
-        String name = "USER";
+        String name = "READ_DATA";
 
         // when
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
-        mockMvc.perform(MockMvcRequestBuilders.delete("/roles/" + name)
+        mockMvc.perform(MockMvcRequestBuilders.delete("/permissions/" + name)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
                 .andDo(print());
 
         // then
-        then(roleService).should().delete(name);
+        then(permissionService).should().delete(name);
     }
 }
