@@ -7,7 +7,7 @@ eureka:
 
 app:
   api-prefix: /api/v1
-  user-url: "user-service:9091"
+  user-url: "lb://user-service"
 
 spring:
   application:

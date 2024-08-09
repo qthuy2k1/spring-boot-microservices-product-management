@@ -4,6 +4,9 @@
     <list size="1">
       <item index="0" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.ResponseStatus" />
     </list>
+    <writeAnnotations>
+      <writeAnnotation name="org.springframework.beans.factory.annotation.Value" />
+    </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="MavenProjectsManager">
@@ -17,7 +20,6 @@
         <option value="$PROJECT_DIR$/redis-service/pom.xml" />
       </set>
     </option>
-    <option name="workspaceImportForciblyTurnedOn" value="true" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="21" project-jdk-type="JavaSDK" />
 </project>

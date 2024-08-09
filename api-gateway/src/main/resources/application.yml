@@ -7,7 +7,7 @@ eureka:
 
 app:
   api-prefix: /api/v1
-  user-url: localhost:9091
+  user-url: http://localhost:9091
 
 spring:
   application:

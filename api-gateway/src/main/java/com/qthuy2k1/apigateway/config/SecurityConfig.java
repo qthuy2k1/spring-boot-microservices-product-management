@@ -1,6 +1,5 @@
 package com.qthuy2k1.apigateway.config;
 
-import com.qthuy2k1.apigateway.repository.IdentityClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
@@ -13,12 +12,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+import com.qthuy2k1.apigateway.repository.IdentityClient;
+
 @Configuration
 @EnableWebFluxSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
     @Value("${app.user-url}")
-    private String userUrl = "http://user-service:9091";
+    private String userUrl = "lb://user-service";
 
     @Bean
     public SecurityWebFilterChain customSecurityFilterChain(ServerHttpSecurity http) {
@@ -30,16 +31,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public WebClient webClient() {
+    @LoadBalanced
+    public WebClient.Builder webClient() {
         return WebClient.builder()
-                .baseUrl("http://user-service:9091")
-                .build();
+                .baseUrl(userUrl);
     }
 
     @Bean
-    public IdentityClient identityClient(WebClient webClient) {
+    public IdentityClient identityClient(WebClient.Builder webClient) {
         HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
-                .builderFor(WebClientAdapter.create(webClient))
+                .builderFor(WebClientAdapter.create(webClient.build()))
                 .build();
 
         return httpServiceProxyFactory.createClient(IdentityClient.class);
