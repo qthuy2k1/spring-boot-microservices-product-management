@@ -1,6 +1,6 @@
 package com.qthuy2k1.apigateway.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.qthuy2k1.apigateway.repository.IdentityClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,13 +12,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
-import com.qthuy2k1.apigateway.repository.IdentityClient;
-
 @Configuration
 @EnableWebFluxSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Value("${app.user-url}")
+    //    @Value("${app.user-url}")
     private String userUrl = "lb://user-service";
 
     @Bean

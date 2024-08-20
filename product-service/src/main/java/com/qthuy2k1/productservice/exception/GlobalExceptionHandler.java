@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
             Map<String, String> responseMap = mapper.readValue(e.getMessage(), Map.class);
             message = responseMap.get("error");
         } catch (IOException ex) {
-            message = "unknown error";
+            message = "i/o exception";
             log.error("Error parsing JSON response: {}", e.getMessage());
         }
         return ResponseEntity.status(e.getStatusCode()).body(ApiResponse.<Void>builder()

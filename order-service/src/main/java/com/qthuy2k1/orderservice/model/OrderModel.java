@@ -18,27 +18,21 @@ import java.util.Set;
 @Table(name = "orders_tbl")
 public class OrderModel {
     @Id
-    @SequenceGenerator(
-            name = "order_id_sequence",
-            sequenceName = "order_id_sequence"
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "order_id_sequence"
-    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
     private Integer userId;
     private String status;
     private BigDecimal totalAmount;
     private Date createdAt;
     private Date updatedAt;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.MERGE, orphanRemoval = true)
     private Set<OrderItemModel> orderItems;
 
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = new Date();
+        this.updatedAt = new Date();
     }
 
     @PreUpdate

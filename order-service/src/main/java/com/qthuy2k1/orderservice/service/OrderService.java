@@ -34,14 +34,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
@@ -56,98 +55,127 @@ public class OrderService {
     OrderMapper orderMapper;
     OrderItemMapper orderItemMapper;
 
-    public OrderResponse createOrder(OrderRequest orderRequest) {
+    @Transactional
+    public OrderResponse createOrder(OrderRequest orderRequest) throws ExecutionException, InterruptedException {
         orderRequest.setStatus("PENDING");
 
         Set<OrderItemRequest> orderItemsRequest = orderRequest.getOrderItem();
-        Set<OrderItemPlaced> orderItemPlacedSet = new HashSet<>();
 
-        orderItemsRequest.forEach(orderItem -> {
-            // request to product service to retrieve the product name
-            ApiResponse<ProductResponse> product = productClient.getProduct(orderItem.getProductId()).getBody();
+        // list of product id
+        String ids = orderItemsRequest.stream()
+                .map(orderItem -> String.valueOf(orderItem.getProductId()))
+                .collect(Collectors.joining(","));
 
-            // throw exception if product not found
-            if (product == null) {
-                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
-            } else {
-                if (product.getResult() == null || product.getResult().getId() == null) {
-                    if (product.getMessage().equals(ErrorCode.PRODUCT_NOT_FOUND.getMessage())) {
+        // for jwt token in asynchronous
+        ServletRequestAttributes requestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        // calling product api in async
+        CompletableFuture<Map<Integer, ProductResponse>> productFuture =
+                CompletableFuture.supplyAsync(() -> {
+                    RequestContextHolder.setRequestAttributes(requestAttributes);
+                    ApiResponse<List<ProductResponse>> productList = productClient.getProductsByListId(ids);
+                    if (productList.getResult() == null) {
                         throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
                     }
-                }
-            }
+                    return productList
+                            .getResult()
+                            .stream()
+                            .collect(Collectors.toMap(ProductResponse::getId, product -> product));
+                });
 
-            // update the product price to order item request
-            orderItem.setPrice(new BigDecimal(product.getResult().getPrice()));
-            OrderItemPlaced orderItemPlaced = new OrderItemPlaced();
-            orderItemPlaced.setProductName(product.getResult().getName());
-            orderItemPlaced.setPrice(new BigDecimal(product.getResult().getPrice()));
-            orderItemPlaced.setQuantity(orderItem.getQuantity());
-
-            // add to orderItemPlaced Set
-            orderItemPlacedSet.add(orderItemPlaced);
-        });
-
-        OrderModel orderModel = orderMapper.toOder(orderRequest);
-
-        // calculate total amount
-        BigDecimal totalAmount = orderRequest.getOrderItem().stream()
-                .map(orderItem ->
-                        orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        // update total amount
-        orderModel.setTotalAmount(totalAmount);
-
-        // Check user exists
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (email == null || email.isEmpty()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
-        ApiResponse<UserResponse> user = userClient.getUserByEmail(email);
-        // throw exception if user not found
-        if (user == null || user.getResult() == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        // set user id
-        orderModel.setUserId(user.getResult().getId());
-
-        // store to db and get the order back
-        OrderModel orderSaved = orderRepository.save(orderModel);
-
-        HashSet<OrderItemModel> orderItemModelsSaved = new HashSet<>();
-        // store all order item to db
-        orderRequest.getOrderItem().forEach(orderItem -> {
-            // for requesting to inventory service to check whether product is in stock or not
-            InventoryResponse inventoryResponses = inventoryClient.isInStock(orderItem.getQuantity(), orderItem.getProductId());
-            if (inventoryResponses == null) {
-                throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        // calling user api in async
+        CompletableFuture<UserResponse> userFuture = CompletableFuture.supplyAsync(() -> {
+            if (email == null || email.isEmpty()) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
 
-            if (!inventoryResponses.isInStock()) {
-                throw new AppException(ErrorCode.PRODUCT_OUT_OF_STOCK);
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            ApiResponse<UserResponse> user = userClient.getUserByEmail(email);
+            if (user == null || user.getResult() == null) {
+                throw new AppException(ErrorCode.USER_NOT_FOUND);
             }
-
-            // store order item
-            orderItem.setOrder(orderSaved);
-            orderItemModelsSaved.add(orderItemRepository.save(orderItemMapper.toOrderItem(orderItem)));
+            return user.getResult();
         });
 
-        // send notification
-        OrderPlaced orderPlaced = new OrderPlaced();
-        orderPlaced.setStatus(orderSaved.getStatus());
-        orderPlaced.setTotalAmount(String.valueOf(orderSaved.getTotalAmount()));
-        orderPlaced.setCreatedAt(LocalDateTime.now().toString());
-        orderPlaced.setUpdatedAt(LocalDateTime.now().toString());
-        orderPlaced.setOrderItems(orderItemPlacedSet);
+        return CompletableFuture.allOf(productFuture, userFuture)
+                .thenApply(__ -> {
+                    Map<Integer, ProductResponse> products = productFuture.join();
+                    UserResponse user = userFuture.join();
 
-        // produce message to create-order topic
-        kafkaTemplate.send("create-order", orderPlaced);
+                    Set<OrderItemModel> orderItemModels = new HashSet<>();
 
-        orderSaved.setOrderItems(orderItemModelsSaved);
+                    orderItemsRequest.forEach(orderItem -> {
+                        ProductResponse product = products.get(orderItem.getProductId());
+                        orderItemModels.add(OrderItemModel.builder()
+                                .productId(product.getId())
+                                .price(new BigDecimal(product.getPrice()))
+                                .quantity(orderItem.getQuantity())
+                                .build()
+                        );
+                    });
+                    orderRequest.getOrderItem().forEach(orderItem -> {
+                        // for requesting to inventory service to check whether product is in stock or not
+                        InventoryResponse inventoryResponses = inventoryClient.isInStock(orderItem.getQuantity(), orderItem.getProductId());
+                        if (inventoryResponses == null) {
+                            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+                        }
 
-        return orderMapper.toOrderResponse(orderSaved);
+                        if (!inventoryResponses.isInStock()) {
+                            throw new AppException(ErrorCode.PRODUCT_OUT_OF_STOCK);
+                        }
+
+                    });
+
+                    OrderModel orderModel = orderMapper.toOder(orderRequest);
+
+                    BigDecimal totalAmount = orderItemModels.stream()
+                            .map(orderItem -> orderItem
+                                    .getPrice()
+                                    .multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    // update total amount
+                    orderModel.setTotalAmount(totalAmount);
+
+                    // set user id
+                    orderModel.setUserId(user.getId());
+                    orderModel.setOrderItems(orderItemModels);
+
+                    log.info("BEFORE SAVING {}", orderModel);
+                    // store to db and get the order back
+                    OrderModel orderSaved = orderRepository.save(orderModel);
+
+                    log.info("SAVEDDDDD {}", orderSaved);
+
+                    orderItemModels.forEach(orderItem -> orderItem.setOrder(orderSaved));
+                    List<OrderItemModel> orderItemModelSaved = orderItemRepository.saveAll(orderItemModels);
+
+                    Set<OrderItemPlaced> orderItemPlaceds = orderItemModelSaved
+                            .stream()
+                            .map(orderItem -> OrderItemPlaced.builder()
+                                    .productName(products.get(orderItem.getProductId()).getName())
+                                    .price(orderItem.getPrice())
+                                    .quantity(orderItem.getQuantity())
+                                    .build())
+                            .collect(Collectors.toSet());
+
+                    // send notification
+                    OrderPlaced orderPlaced = OrderPlaced.builder()
+                            .status(orderSaved.getStatus())
+                            .totalAmount(String.valueOf(orderSaved.getTotalAmount()))
+                            .createdAt(LocalDateTime.now().toString())
+                            .createdAt(LocalDateTime.now().toString())
+                            .orderItems(orderItemPlaceds)
+                            .build();
+
+                    // produce message to create-order topic
+                    kafkaTemplate.send("create-order", orderPlaced);
+
+//                    orderSaved.setOrderItems(orderItemModelsSaved);
+
+                    return orderMapper.toOrderResponse(orderSaved);
+                }).get();
     }
 
     public List<OrderGraphQLResponse> getAllOrdersGraphQL() {
@@ -174,6 +202,10 @@ public class OrderService {
 
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if (servletRequestAttributes == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
 
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
 
@@ -235,8 +267,6 @@ public class OrderService {
             if (user == null || user.getResult() == null) {
                 throw new AppException(ErrorCode.USER_NOT_FOUND);
             }
-
-            log.info(user.getResult().toString());
 
             // convert order item list to order item set
             OrderGraphQLResponse orderGraphQLResponse = orderMapper.toOrderGraphQLResponse(orderModel);

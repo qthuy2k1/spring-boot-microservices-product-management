@@ -115,6 +115,14 @@ public class ProductService {
     }
 
 
+    public List<ProductResponse> getProductByListId(Set<Integer> ids) {
+        List<ProductModel> productList = productRepository.findAllById(ids);
+        if (ids.size() != productList.size()) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        return productList.stream().map(productMapper::toProductResponse).toList();
+    }
+
     public List<ProductGraphQLResponse> getProductGraphQLByListId(Set<Integer> ids) {
         List<ProductModel> productList = productRepository.findAllById(ids);
         return productList.stream().map(productMapper::toProductGraphQLResponse).toList();
