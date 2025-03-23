@@ -38,7 +38,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class AuthenticationService {
+public class AuthenticationService implements IAuthenticationService {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
     InvalidatedRepository invalidatedRepository;

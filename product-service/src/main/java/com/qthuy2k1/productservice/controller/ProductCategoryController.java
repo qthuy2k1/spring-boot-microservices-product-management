@@ -3,7 +3,7 @@ package com.qthuy2k1.productservice.controller;
 import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
-import com.qthuy2k1.productservice.service.ProductCategoryService;
+import com.qthuy2k1.productservice.service.IProductCategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("/product-categories")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductCategoryController {
-    ProductCategoryService productCategoryService;
+    IProductCategoryService productCategoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

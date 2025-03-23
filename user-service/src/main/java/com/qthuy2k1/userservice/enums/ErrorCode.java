@@ -12,9 +12,9 @@ import org.springframework.http.HttpStatusCode;
 @AllArgsConstructor
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
-    INVALID_KEY(1001, "Invalid message key", HttpStatus.BAD_REQUEST),
-    USER_EXISTED(1002, "User existed", HttpStatus.BAD_REQUEST),
-    USER_NOT_FOUND(1003, "User not found", HttpStatus.NOT_FOUND),
+    INVALID_KEY(1001, "invalid message key", HttpStatus.BAD_REQUEST),
+    USER_EXISTED(1002, "user existed", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND(1003, "user not found", HttpStatus.NOT_FOUND),
     INVALID_ID(1004, "invalid id", HttpStatus.BAD_REQUEST),
     USERNAME_NULL(1005, "your name shouldn't be null", HttpStatus.BAD_REQUEST),
     USERNAME_BLANK(1006, "your name shouldn't be blank", HttpStatus.BAD_REQUEST),
@@ -25,8 +25,11 @@ public enum ErrorCode {
     EMAIL_NULL(1011, "your email address shouldn't be null", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1012, "unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1013, "you do not have permission", HttpStatus.FORBIDDEN),
-    ROLE_NOT_FOUND_SERVER(1014, "role not found", HttpStatus.INTERNAL_SERVER_ERROR),
-    BAD_CREDENTIALS(1015, "wrong email or password", HttpStatus.UNAUTHORIZED);
+    ROLE_NOT_FOUND(1014, "role not found", HttpStatus.BAD_REQUEST),
+    BAD_CREDENTIALS(1015, "wrong email or password", HttpStatus.UNAUTHORIZED),
+    PERMISSION_NOT_FOUND(1016, "permission not found", HttpStatus.BAD_REQUEST),
+    PERMISSION_EXISTED(1017, "permission existed", HttpStatus.BAD_REQUEST),
+    ROLE_EXISTED(1018, "role existed", HttpStatus.BAD_REQUEST);
 
     int code;
     String message;

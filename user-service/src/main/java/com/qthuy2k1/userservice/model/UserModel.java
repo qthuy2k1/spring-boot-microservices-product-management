@@ -35,7 +35,7 @@ public class UserModel {
     @NotEmpty(message = "PASSWORD_NULL")
     String password;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     Set<Role> roles;
 
     public UserModel(String name, String email, String password) {

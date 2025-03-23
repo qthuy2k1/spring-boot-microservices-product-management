@@ -5,7 +5,7 @@ import com.qthuy2k1.paymentservice.dto.OrderPaymentDTO;
 import com.qthuy2k1.paymentservice.dto.PaymentResDTO;
 import com.qthuy2k1.paymentservice.dto.TransactionStatusDTO;
 import com.qthuy2k1.paymentservice.model.PaymentModel;
-import com.qthuy2k1.paymentservice.service.PaymentService;
+import com.qthuy2k1.paymentservice.service.IPaymentService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PaymentController {
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
-    private final PaymentService paymentService;
+    private final IPaymentService paymentService;
 
     @PostMapping("/create-payment")
     public ResponseEntity<?> createPayment(@RequestBody OrderPaymentDTO orderPaymentDTO) throws UnsupportedEncodingException {

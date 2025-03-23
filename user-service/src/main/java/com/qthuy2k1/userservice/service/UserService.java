@@ -1,12 +1,15 @@
 package com.qthuy2k1.userservice.service;
 
+import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
+import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.enums.RoleEnum;
 import com.qthuy2k1.userservice.event.UserCreated;
 import com.qthuy2k1.userservice.exception.AppException;
+import com.qthuy2k1.userservice.mapper.RoleMapper;
 import com.qthuy2k1.userservice.mapper.UserMapper;
 import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -33,16 +37,18 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserService {
+public class UserService implements IUserService {
     UserRepository userRepository;
     KafkaTemplate<String, UserCreated> kafkaTemplate;
     PasswordEncoder passwordEncoder;
     UserMapper userMapper;
     RoleRepository roleRepository;
+    RoleService roleService;
+    RoleMapper roleMapper;
 
 
     public UserResponse createUser(UserRequest userRequest) {
-        // Check if user email already exists
+        // Check if user email already existed
         if (userRepository.existsByEmail(userRequest.getEmail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
@@ -51,9 +57,19 @@ public class UserService {
 
         // Encode the password using BCrypt
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-        Role role = roleRepository.findById(RoleEnum.USER.name())
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND_SERVER));
-        user.setRoles(Set.of(role));
+
+        // Check if user role already existed
+        Optional<Role> roleOptional = roleRepository.findById(RoleEnum.USER.name());
+        if (roleOptional.isEmpty()) {
+            RoleResponse role = roleService.create(
+                    RoleRequest.builder()
+                            .name(RoleEnum.USER.name())
+                            .description("user role description")
+                            .permissions(Set.of())
+                            .build()
+            );
+            user.setRoles(Set.of(roleMapper.toRole(role)));
+        }
 
         user = userRepository.save(user);
 
@@ -68,7 +84,7 @@ public class UserService {
         return users.stream().map(userMapper::toUserResponse).toList();
     }
 
-    @CacheEvict(cacheNames = "users", key = "#id")
+    @CacheEvict(cacheNames = "users", key = "#p0", condition = "#p0!=null")
     public void deleteUserById(Integer id) {
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

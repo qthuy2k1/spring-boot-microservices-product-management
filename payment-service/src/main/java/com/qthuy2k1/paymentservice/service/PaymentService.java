@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final IOrderClient orderClient;
 

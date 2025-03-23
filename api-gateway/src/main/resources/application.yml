@@ -74,7 +74,7 @@ spring:
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=${app.api-prefix}/orders
+            - Path=${app.api-prefix}/orders/**
           filters:
             - StripPrefix=2
 

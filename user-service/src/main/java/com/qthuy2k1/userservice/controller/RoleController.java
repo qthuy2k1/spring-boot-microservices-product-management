@@ -4,7 +4,7 @@ import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
-import com.qthuy2k1.userservice.service.RoleService;
+import com.qthuy2k1.userservice.service.IRoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class RoleController {
-    RoleService roleService;
+    IRoleService roleService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<RoleResponse>> create(@RequestBody RoleRequest request) {

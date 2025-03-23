@@ -4,7 +4,7 @@ import com.qthuy2k1.userservice.dto.request.PermissionRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
-import com.qthuy2k1.userservice.service.PermissionService;
+import com.qthuy2k1.userservice.service.IPermissionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class PermissionController {
-    PermissionService permissionService;
+    IPermissionService permissionService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<PermissionResponse>> create(@RequestBody PermissionRequest request) {

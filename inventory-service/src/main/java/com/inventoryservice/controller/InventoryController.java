@@ -2,7 +2,7 @@ package com.inventoryservice.controller;
 
 import com.inventoryservice.dto.InventoryRequest;
 import com.inventoryservice.dto.InventoryResponse;
-import com.inventoryservice.service.InventoryService;
+import com.inventoryservice.service.IInventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/inventories")
 @Slf4j
 public class InventoryController {
-    private final InventoryService inventoryService;
+    private final IInventoryService inventoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

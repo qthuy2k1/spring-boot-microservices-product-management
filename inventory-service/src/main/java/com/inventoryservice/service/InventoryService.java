@@ -14,7 +14,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InventoryService {
+public class InventoryService implements IInventoryService {
     private final InventoryRepository inventoryRepository;
 
     public void createInventory(InventoryRequest inventoryRequest) {

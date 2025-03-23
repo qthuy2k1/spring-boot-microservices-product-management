@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ProductCategoryService {
+public class ProductCategoryService implements IProductCategoryService {
     ProductCategoryRepository productCategoryRepository;
     ProductCategoryMapper productCategoryMapper;
 

@@ -5,7 +5,7 @@ import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
-import com.qthuy2k1.userservice.service.UserService;
+import com.qthuy2k1.userservice.service.IUserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
-    private final UserService userService;
+    private final IUserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponse>> signup(@RequestBody @Valid UserRequest userRequest) {

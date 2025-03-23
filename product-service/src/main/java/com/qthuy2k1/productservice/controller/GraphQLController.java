@@ -4,7 +4,7 @@ import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ProductGraphQLResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
 import com.qthuy2k1.productservice.exception.AppException;
-import com.qthuy2k1.productservice.service.ProductService;
+import com.qthuy2k1.productservice.service.IProductService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,7 +23,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class GraphQLController {
-    ProductService productService;
+    IProductService productService;
 
     @QueryMapping
     public ProductGraphQLResponse productById(@Argument("id") int id) {

@@ -1,5 +1,6 @@
 package com.qthuy2k1.userservice.config;
 
+import com.qthuy2k1.userservice.enums.RoleEnum;
 import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.RoleRepository;
@@ -27,10 +28,10 @@ public class ApplicationInitConfig {
         return args -> {
             if (userRepository.findByEmail("admin@gmail.com").isEmpty()) {
                 Role role = new Role();
-                if (roleRepository.findById("ADMIN").isEmpty()) {
+                if (roleRepository.findById(RoleEnum.ADMIN.name()).isEmpty()) {
                     role = Role.builder()
-                            .name("ADMIN")
-                            .description("admin description")
+                            .name(RoleEnum.ADMIN.name())
+                            .description("admin role description")
                             .build();
 
                     roleRepository.save(role);

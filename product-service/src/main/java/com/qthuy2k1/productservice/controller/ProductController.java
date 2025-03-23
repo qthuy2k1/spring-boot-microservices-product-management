@@ -7,7 +7,7 @@ import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.MessageResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
-import com.qthuy2k1.productservice.service.ProductService;
+import com.qthuy2k1.productservice.service.IProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/products")
 @Slf4j
 public class ProductController {
-    private final ProductService productService;
+    private final IProductService productService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")

@@ -29,7 +29,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ProductService {
+public class ProductService implements IProductService {
     ProductRepository productRepository;
     ProductCategoryRepository productCategoryRepository;
     InventoryClient inventoryClient;

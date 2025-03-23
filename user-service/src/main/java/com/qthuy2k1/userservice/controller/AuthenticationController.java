@@ -8,7 +8,7 @@ import com.qthuy2k1.userservice.dto.request.RefreshTokenRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.AuthenticationResponse;
 import com.qthuy2k1.userservice.dto.response.IntrospectResponse;
-import com.qthuy2k1.userservice.service.AuthenticationService;
+import com.qthuy2k1.userservice.service.IAuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,7 +26,7 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationController {
-    AuthenticationService authenticationService;
+    IAuthenticationService authenticationService;
 
     @PostMapping("/token")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {

@@ -2,6 +2,8 @@ package com.qthuy2k1.userservice.service;
 
 import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
+import com.qthuy2k1.userservice.enums.ErrorCode;
+import com.qthuy2k1.userservice.exception.AppException;
 import com.qthuy2k1.userservice.mapper.RoleMapper;
 import com.qthuy2k1.userservice.model.Permission;
 import com.qthuy2k1.userservice.model.Role;
@@ -20,14 +22,23 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class RoleService {
+public class RoleService implements IRoleService {
     RoleRepository roleRepository;
     RoleMapper roleMapper;
     PermissionRepository permissionRepository;
 
     public RoleResponse create(RoleRequest request) {
+        // check if role name existed
+        if (roleRepository.findByName(request.getName()).isPresent()) {
+            throw new AppException(ErrorCode.ROLE_EXISTED);
+        }
+
         Role role = roleMapper.toRole(request);
         List<Permission> permissions = permissionRepository.findAllById(request.getPermissions());
+        // permission request is not existed
+        if (permissions.isEmpty()) {
+            throw new AppException(ErrorCode.PERMISSION_NOT_FOUND);
+        }
         role.setPermissions(new HashSet<>(permissions));
 
         return roleMapper.toRoleResponse(roleRepository.save(role));
