@@ -1,86 +1,125 @@
 package com.qthuy2k1.userservice.unit.service;
 
 import com.qthuy2k1.userservice.dto.request.RoleRequest;
+import com.qthuy2k1.userservice.dto.response.PermissionResponse;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
+import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.mapper.RoleMapper;
 import com.qthuy2k1.userservice.model.Permission;
 import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.repository.PermissionRepository;
 import com.qthuy2k1.userservice.repository.RoleRepository;
+import com.qthuy2k1.userservice.repository.UserRepository;
 import com.qthuy2k1.userservice.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
-public class RoleServiceTest {
+@SpringBootTest
+public class RoleServiceTest extends AbstractIntegrationTest {
     private final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
-    @Mock
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private RoleRepository roleRepository;
-    @Mock
+    @Autowired
     private PermissionRepository permissionRepository;
-    @InjectMocks
-    private RoleService underTest;
+    @Autowired
+    private RoleService roleService;
+    private Role roleSaved;
+    private Permission permissionSaved1;
+    private Permission permissionSaved2;
 
     @BeforeEach
     void setUp() {
-        underTest = new RoleService(roleRepository, roleMapper, permissionRepository);
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+
+        permissionSaved1 = permissionRepository.save(Permission.builder()
+                .name("READ_DATA")
+                .description("read data description")
+                .build());
+        permissionSaved2 = permissionRepository.save(Permission.builder()
+                .name("WRITE_DATA")
+                .description("write data description")
+                .build());
+        roleSaved = roleRepository.save(Role.builder()
+                .name("ADMIN")
+                .description("admin role")
+                .permissions(Set.of(permissionSaved1, permissionSaved2))
+                .build());
     }
 
     @Test
-    void create() {
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
+    void create_And_GetAll_Roles() {
         RoleRequest roleRequest = RoleRequest.builder()
                 .name("USER")
                 .description("user role")
-                .permissions(Set.of("READ_DATA"))
+                .permissions(Set.of(permissionSaved1.getName(), permissionSaved2.getName()))
                 .build();
-        Role role = Role.builder()
+
+        RoleResponse roleCreate = roleService.create(roleRequest);
+
+        List<RoleResponse> roles = roleService.getAll();
+        assertThat(roles.size()).isEqualTo(2);
+
+        // Get the newly inserted role which is at index 1
+        RoleResponse roleResp = roles.get(1);
+        assertThat(roleCreate.getName()).isEqualTo(roleResp.getName());
+        assertThat(roleCreate.getDescription()).isEqualTo(roleResp.getDescription());
+
+        // Extract permission names from roleCreate
+        Set<String> permissionNamesCreate = roleCreate.getPermissions().stream()
+                .map(PermissionResponse::getName)
+                .collect(Collectors.toSet());
+        // Extract permission names from roles
+        Set<String> permissionNamesResp = roleResp.getPermissions().stream()
+                .map(PermissionResponse::getName)
+                .collect(Collectors.toSet());
+
+        // Compare the sets of permission names
+        assertThat(permissionNamesCreate.equals(permissionNamesResp)).isTrue();
+    }
+
+    @Test
+    void create_Role_NotFound_Permission() {
+        RoleRequest roleRequest = RoleRequest.builder()
                 .name("USER")
                 .description("user role")
-                .permissions(Set.of(permission))
+                .permissions(Set.of("MANAGER")) // permission doesn't exist in db
                 .build();
-        RoleResponse roleModelResp = roleMapper.toRoleResponse(role);
 
-        given(permissionRepository.findAllById(roleRequest.getPermissions())).willReturn(List.of(permission));
-
-        when(roleRepository.save(any())).thenReturn(role);
-        RoleResponse roleResp = underTest.create(roleRequest);
-
-        then(permissionRepository).should().findAllById(any());
-        then(roleRepository).should().save(role);
-
-        assertThat(roleResp.getName()).isEqualTo(roleModelResp.getName());
-        assertThat(roleResp.getDescription()).isEqualTo(roleModelResp.getDescription());
-        assertThat(roleResp.getPermissions()).isEqualTo(roleModelResp.getPermissions());
+        assertThatThrownBy(() ->
+                roleService.create(roleRequest))
+                .hasMessageContaining(ErrorCode.PERMISSION_NOT_FOUND.getMessage());
     }
 
     @Test
-    void getAll() {
-        underTest.getAll();
-        then(roleRepository).should().findAll();
+    void create_Role_Existed() {
+        RoleRequest roleRequest = RoleRequest.builder()
+                .name("ADMIN")
+                .description("admin role")
+                .permissions(Set.of(permissionSaved1.getName(), permissionSaved2.getName()))
+                .build();
+
+        assertThatThrownBy(() ->
+                roleService.create(roleRequest))
+                .hasMessageContaining(ErrorCode.ROLE_EXISTED.getMessage());
     }
 
     @Test
-    void delete() {
-        String role = "USER";
-        underTest.delete(role);
-        then(roleRepository).should().deleteById(role);
+    void delete_Role() {
+        roleService.delete(roleSaved.getName());
+        List<RoleResponse> roles = roleService.getAll();
+        assertThat(roles.size()).isEqualTo(0);
     }
 }

@@ -2,103 +2,102 @@ package com.qthuy2k1.userservice.unit.service;
 
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
+import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.event.UserCreated;
+import com.qthuy2k1.userservice.mapper.RoleMapper;
 import com.qthuy2k1.userservice.mapper.UserMapper;
 import com.qthuy2k1.userservice.model.Permission;
 import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
+import com.qthuy2k1.userservice.repository.PermissionRepository;
 import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
-import com.qthuy2k1.userservice.service.UserService;
+import com.qthuy2k1.userservice.service.IUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+@SpringBootTest
+class UserServiceTest extends AbstractIntegrationTest {
     private final UserMapper userMapper = Mappers.getMapper(UserMapper.class);
-    @Mock
+    private final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
+    @Autowired
     private UserRepository userRepository;
-    @Mock
+    @MockBean
     private KafkaTemplate<String, UserCreated> kafkaTemplate;
-    @Mock
+    @Autowired
     private PasswordEncoder passwordEncoder;
-    @InjectMocks
-    private UserService underTest;
-    @Mock
+    @Autowired
+    private IUserService userService;
+    @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private PermissionRepository permissionRepository;
+    private UserModel userSaved;
+    private Role roleSaved;
 
     @BeforeEach
     void setUp() {
-        this.passwordEncoder = new BCryptPasswordEncoder();
-        underTest = new UserService(
-                userRepository, kafkaTemplate, passwordEncoder, userMapper, roleRepository);
+        userRepository.deleteAll();
+
+        Permission permissionSaved = permissionRepository.save(Permission.builder()
+                .name("READ_DATA")
+                .description("update data description")
+                .build());
+        roleSaved = roleRepository.save(Role.builder()
+                .name("USER")
+                .description("user role")
+                .permissions(Set.of(permissionSaved))
+                .build());
+        userSaved = userRepository.save(UserModel.builder()
+                .name("user 9999")
+                .email("user9999@gmail.com")
+                .password("123123")
+                .roles(Set.of(roleSaved))
+                .build());
     }
 
     @Test
-    void createUser() {
+    public void testConnection() {
+        assertThat(postgres.isRunning()).isTrue();
+        assertThat(REDIS_CONTAINER.isRunning()).isTrue();
+    }
+
+    @Test
+    void create_And_GetAll_Users() {
         // given
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Role role = Role.builder()
-                .name("USER")
-                .description("user role")
-                .permissions(Set.of(permission))
-                .build();
         UserRequest userRequest = UserRequest.builder()
                 .name("John Doe")
                 .email("doe@gmail.com")
                 .password("123123")
                 .build();
-        UserModel userModel = userMapper.toUser(userRequest);
-        userModel.setRoles(Set.of(role));
 
-        given(roleRepository.findById(role.getName())).willReturn(Optional.of(role));
+        UserResponse userCreate = userService.createUser(userRequest);
 
-        // when
-        when(userRepository.save(any())).thenReturn(userModel);
-        underTest.createUser(userRequest);
+        List<UserResponse> users = userService.getAllUsers();
+        // Get the newly inserted user which is at index 1
+        UserResponse userResp = users.get(1);
 
-        // then
-        ArgumentCaptor<UserModel> userArgumentCaptor = ArgumentCaptor.forClass(UserModel.class);
-        then(userRepository).should().save(userArgumentCaptor.capture());
-
-        UserModel capturedUser = userArgumentCaptor.getValue();
-
-        then(userRepository).should().existsByEmail(userRequest.getEmail());
-
-        assertThat(capturedUser.getName()).isEqualTo(userRequest.getName());
-        assertThat(capturedUser.getEmail()).isEqualTo(userRequest.getEmail());
-        assertThat(capturedUser.getRoles()).isEqualTo(Set.of(role));
-        assertThat(passwordEncoder.matches(
-                userRequest.getPassword(), capturedUser.getPassword())).isTrue();
+        assertThat(users.size()).isEqualTo(2);
+        assertThat(userResp.getName()).isEqualTo(userCreate.getName());
+        assertThat(userResp.getEmail()).isEqualTo(userCreate.getEmail());
+        assertThat(userResp.getRoles()).isEqualTo(Set.of());
     }
 
     @Test()
@@ -106,335 +105,172 @@ class UserServiceTest {
         // given
         UserRequest userRequest = UserRequest.builder()
                 .name("John Doe")
-                .email("doe@gmail.com")
+                .email("user9999@gmail.com")
                 .password("123123")
                 .build();
-        given(userRepository.existsByEmail(userRequest.getEmail())).willReturn(true);
 
-        // then
-        then(userRepository).should(never()).save(any());
         assertThatThrownBy(() ->
-                underTest.createUser(userRequest)).
-                hasMessageContaining(ErrorCode.USER_EXISTED.getMessage());
-    }
-
-    @Test
-    void getAllUsers() {
-        // when
-        underTest.getAllUsers();
-
-        // then
-        then(userRepository).should().findAll();
+                userService.createUser(userRequest))
+                .hasMessageContaining(ErrorCode.USER_EXISTED.getMessage());
     }
 
     @Test
     void deleteUser() {
-        // given
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Role role = Role.builder()
-                .name("USER")
-                .description("user role")
-                .permissions(Set.of(permission))
-                .build();
-        UserModel user = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doe@gmail.com")
-                .password("123123")
-                .roles(Set.of(role))
-                .build();
+        userService.deleteUserById(userSaved.getId());
 
-        given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+        List<UserResponse> users = userService.getAllUsers();
+        // The user list size should be 0
+        assertThat(users.size()).isEqualTo(0);
 
-        // when
-        underTest.deleteUserById(user.getId());
+        assertThatThrownBy(() ->
+                userService.getUserById(userSaved.getId())).
+                hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
 
-        // then
-        then(userRepository).should().delete(user);
     }
 
     @Test
     void deleteUserById_ExceptionThrown_UserNotFound() {
         // given
-        int id = 1;
-        given(userRepository.findById(id)).willReturn(Optional.empty());
-
-        // then
+        int id = userSaved.getId() + 1;
         assertThatThrownBy(() ->
-                underTest.deleteUserById(id)).
+                userService.deleteUserById(id)).
                 hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
-
-        then(userRepository).should(never()).delete(any());
     }
 
     @Test
     void updateUserById() {
-        // given
-        int id = 1;
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Set<Role> roles = Set.of(
-                Role.builder()
-                        .name("USER")
-                        .description("user role")
-                        .permissions(Set.of(permission))
-                        .build()
-        );
         UserUpdateRequest userRequest = UserUpdateRequest.builder()
-                .name("John Doe")
-                .email("doe@gmail.com")
+                .name("user 9998")
+                .email("user9998@gmail.com")
                 .password("123123")
-                .roles(List.of("ADMIN"))
-                .build();
-        UserModel userModel = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doe@gmail.com")
-                .password("123123")
-                .roles(roles)
+                .roles(List.of(roleSaved.getName()))
                 .build();
 
-        UserModel userUpdatedModel = new UserModel();
-        userMapper.updateUser(userUpdatedModel, userRequest);
-        userUpdatedModel.setRoles(roles);
+        userService.updateUserById(userSaved.getId(), userRequest);
 
-        given(userRepository.findById(id)).willReturn(Optional.of(userModel));
-        given(roleRepository.findAllById(userRequest.getRoles())).willReturn(roles.stream().toList());
+        UserResponse user = userService.getUserById(userSaved.getId());
 
-        // when
-        when(userRepository.save(any())).thenReturn(userUpdatedModel);
-        underTest.updateUserById(id, userRequest);
-
-        // then
-        ArgumentCaptor<UserModel> userArgumentCaptor = ArgumentCaptor.forClass(UserModel.class);
-        then(userRepository).should().save(userArgumentCaptor.capture());
-
-        UserModel capturedUser = userArgumentCaptor.getValue();
-
-        assertThat(capturedUser.getName()).isEqualTo(userRequest.getName());
-        assertThat(capturedUser.getEmail()).isEqualTo(userRequest.getEmail());
-        assertThat(capturedUser.getRoles()).isEqualTo(roles);
-        assertThat(passwordEncoder.matches(
-                userRequest.getPassword(), capturedUser.getPassword())).isTrue();
+        assertThat(user.getName()).isEqualTo(userRequest.getName());
+        assertThat(user.getEmail()).isEqualTo(userRequest.getEmail());
+        assertThat(user.getRoles()).isEqualTo(Set.of(roleMapper.toRoleResponse(roleSaved)));
     }
 
     @Test
     void updateUserById_ExceptionThrown_UserNotFound() {
-        // given
-        int id = 1;
+        int id = userSaved.getId() + 1;
         UserUpdateRequest userRequest = UserUpdateRequest.builder()
-                .name("John Doe")
-                .email("doe@gmail.com")
+                .name("user 9998")
+                .email("user9998@gmail.com")
                 .password("123123")
-                .roles(List.of("ADMIN"))
+                .roles(List.of(roleSaved.getName()))
                 .build();
 
-        given(userRepository.findById(id)).willReturn(Optional.empty());
-
-        // then
         assertThatThrownBy(() ->
-                underTest.updateUserById(id, userRequest)).
+                userService.updateUserById(id, userRequest)).
                 hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
-        then(userRepository).should(never()).save(any());
     }
 
     @Test
     void updateUserById_ExceptionThrown_EmailAlreadyIsTaken() {
-        // given
-        int id = 1;
+        // create another user
+        userService.createUser(UserRequest.builder()
+                .name("John Doe")
+                .email("doe@gmail.com")
+                .password("123123")
+                .build());
+
         UserUpdateRequest userRequest = UserUpdateRequest.builder()
                 .name("John Doe")
                 .email("doe@gmail.com")
                 .password("123123")
-                .roles(List.of("ADMIN"))
-                .build();
-        UserModel userModel = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doee@gmail.com")
-                .password("123123")
-                .roles(Set.of())
+                .roles(List.of())
                 .build();
 
-        given(userRepository.findById(id)).willReturn(Optional.of(userModel));
-        given(userRepository.existsByEmail(userRequest.getEmail())).willReturn(true);
-
-        // then
         assertThatThrownBy(() ->
-                underTest.updateUserById(id, userRequest)).
+                userService.updateUserById(userSaved.getId(), userRequest)).
                 hasMessageContaining(ErrorCode.USER_EXISTED.getMessage());
-        then(userRepository).should(never()).save(any());
     }
 
 
     @Test
     void getUserById() {
-        // given
-        int id = 1;
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Role role = Role.builder()
-                .name("USER")
-                .description("user role")
-                .permissions(Set.of(permission))
-                .build();
-        UserModel userModel = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doe@gmail.com")
-                .password("123123")
-                .roles(Set.of(role))
-                .build();
-        UserResponse userModelResp = userMapper.toUserResponse(userModel);
+        UserResponse userResp = userService.getUserById(userSaved.getId());
 
-        given(userRepository.findById(id)).willReturn(Optional.of(userModel));
+        List<RoleResponse> userSavedRoleResponse = userSaved.getRoles()
+                .stream()
+                .map(roleMapper::toRoleResponse)
+                .toList();
 
-        // when
-        UserResponse userResp = underTest.getUserById(id);
-
-        // then
-        assertThat(userResp.getId()).isEqualTo(userModelResp.getId());
-        assertThat(userResp.getName()).isEqualTo(userModelResp.getName());
-        assertThat(userResp.getEmail()).isEqualTo(userModelResp.getEmail());
-        assertThat(userResp.getRoles()).isEqualTo(userModelResp.getRoles());
-
-        then(userRepository).should().findById(id);
+        assertThat(userResp.getId()).isEqualTo(userSaved.getId());
+        assertThat(userResp.getName()).isEqualTo(userSaved.getName());
+        assertThat(userResp.getEmail()).isEqualTo(userSaved.getEmail());
+        assertThat(userResp.getRoles().toString()).isEqualTo(userSavedRoleResponse.toString());
     }
 
 
     @Test
     void getUserById_ExceptionThrown_UserNotFound() {
-        // given
-        int id = 1;
-        given(userRepository.findById(id)).willReturn(Optional.empty());
-
-        // when
+        int id = userSaved.getId() + 1;
         assertThatThrownBy(() ->
-                underTest.getUserById(id))
+                userService.getUserById(id))
                 .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
-
-        // then
-        then(userRepository).should().findById(id);
     }
 
     @Test
     void getMyInfo() {
         // given
-        String email = "user@gmail.com";
+        String email = userSaved.getEmail();
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 email, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Role role = Role.builder()
-                .name("USER")
-                .description("user role")
-                .permissions(Set.of(permission))
-                .build();
-        UserModel userModel = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doe@gmail.com")
-                .password("123123")
-                .roles(Set.of(role))
-                .build();
-        UserResponse userModelResp = userMapper.toUserResponse(userModel);
+        UserResponse user = userService.getMyInfo();
 
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(userModel));
+        List<RoleResponse> userSavedRoleResponse = userSaved.getRoles()
+                .stream()
+                .map(roleMapper::toRoleResponse)
+                .toList();
 
-        // when
-        UserResponse user = underTest.getMyInfo();
-
-        // then
         assertThat(user).isNotNull();
-        assertThat(user.getId()).isEqualTo(userModelResp.getId());
-        assertThat(user.getName()).isEqualTo(userModelResp.getName());
-        assertThat(user.getRoles()).isEqualTo(userModelResp.getRoles());
+        assertThat(user.getId()).isEqualTo(userSaved.getId());
+        assertThat(user.getName()).isEqualTo(userSaved.getName());
+        assertThat(user.getEmail()).isEqualTo(userSaved.getEmail());
+        assertThat(user.getRoles().toString()).isEqualTo(userSavedRoleResponse.toString());
     }
 
     @Test
     void existsById() {
-        // given
-        int id = 1;
-        given(userRepository.existsById(id)).willReturn(true);
-
-        // when
-        boolean isUserExists = underTest.existsById(id);
-
-        // then
+        boolean isUserExists = userService.existsById(userSaved.getId());
         assertThat(isUserExists).isTrue();
-        then(userRepository).should().existsById(id);
     }
 
     @Test
     void existsById_NotExists() {
-        // given
-        int id = 1;
-        given(userRepository.existsById(id)).willReturn(false);
-
-        // when
-        boolean isUserExists = underTest.existsById(id);
-
-        // then
+        int id = userSaved.getId() + 1;
+        boolean isUserExists = userService.existsById(id);
         assertThat(isUserExists).isFalse();
-        then(userRepository).should().existsById(id);
     }
 
     @Test
     void getUserByEmail() {
-        // given
-        String email = "user@gmail.com";
-        Permission permission = Permission.builder()
-                .name("READ_DATA")
-                .description("update data description")
-                .build();
-        Role role = Role.builder()
-                .name("USER")
-                .description("user role")
-                .permissions(Set.of(permission))
-                .build();
-        UserModel userModel = UserModel.builder()
-                .id(1)
-                .name("John Doe")
-                .email("doe@gmail.com")
-                .password("123123")
-                .roles(Set.of(role))
-                .build();
-        UserResponse userModelResp = userMapper.toUserResponse(userModel);
+        String email = userSaved.getEmail();
+        UserResponse user = userService.getUserByEmail(email);
+        List<RoleResponse> userSavedRoleResponse = userSaved.getRoles()
+                .stream()
+                .map(roleMapper::toRoleResponse)
+                .toList();
 
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(userModel));
-
-        // when
-        UserResponse userResp = underTest.getUserByEmail(email);
-
-        // then
-        assertThat(userResp.getId()).isEqualTo(userModelResp.getId());
-        assertThat(userResp.getName()).isEqualTo(userModelResp.getName());
-        assertThat(userResp.getEmail()).isEqualTo(userModelResp.getEmail());
-        assertThat(userResp.getRoles()).isEqualTo(userModelResp.getRoles());
-
-        then(userRepository).should().findByEmail(email);
+        assertThat(user).isNotNull();
+        assertThat(user.getId()).isEqualTo(userSaved.getId());
+        assertThat(user.getName()).isEqualTo(userSaved.getName());
+        assertThat(user.getEmail()).isEqualTo(userSaved.getEmail());
+        assertThat(user.getRoles().toString()).isEqualTo(userSavedRoleResponse.toString());
     }
 
     @Test
     void getUserByEmail_UserNotFound() {
-        // given
-        String email = "user@gmail.com";
-        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
-
-        // then
+        String email = "notfound" + userSaved.getEmail();
         assertThatThrownBy(() ->
-                underTest.getUserByEmail(email))
+                userService.getUserByEmail(email))
                 .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
-        then(userRepository).should().findByEmail(email);
     }
 }

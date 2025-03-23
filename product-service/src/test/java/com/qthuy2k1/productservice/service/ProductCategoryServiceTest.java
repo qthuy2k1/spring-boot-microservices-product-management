@@ -7,85 +7,69 @@ import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.*;
 
 
-@ExtendWith(MockitoExtension.class)
-public class ProductCategoryServiceTest {
+@SpringBootTest
+@Testcontainers
+public class ProductCategoryServiceTest extends AbstractIntegrationTest {
     private final ProductCategoryMapper productCategoryMapper = Mappers.getMapper(ProductCategoryMapper.class);
-    @Mock
+    @Autowired
     private ProductCategoryRepository productCategoryRepository;
-    @InjectMocks
-    private ProductCategoryService underTest;
+    @Autowired
+    private IProductCategoryService productCategoryService;
+    private ProductCategoryModel productCategorySaved;
 
     @BeforeEach
     void setup() {
-        underTest = new ProductCategoryService(productCategoryRepository, productCategoryMapper);
+        productCategoryRepository.deleteAll();
+        productCategorySaved = productCategoryRepository.save(ProductCategoryModel.builder()
+                .name("Category 999")
+                .description("Description of Category 999")
+                .products(Set.of())
+                .build());
     }
 
     @Test
-    void create() {
+    void create_And_GetAll_ProductCategory() {
         // given
-        ProductCategoryRequest productCategoryRequest = ProductCategoryRequest.builder()
-                .name("Product Category")
-                .description("Product category description")
+        ProductCategoryRequest productCategoryRequest1 = ProductCategoryRequest.builder()
+                .name("Product Category 1")
+                .description("Product category description 1")
                 .build();
-        ProductCategoryModel productCategory = productCategoryMapper.toProductCategory(productCategoryRequest);
+        ProductCategoryRequest productCategoryRequest2 = ProductCategoryRequest.builder()
+                .name("Product Category 2")
+                .description("Product category description 2")
+                .build();
 
-        // when
-        when(productCategoryRepository.save(any())).thenReturn(productCategory);
-        underTest.createProductCategory(productCategoryRequest);
+        ProductCategoryResponse productCategoryCreate1 = productCategoryService.createProductCategory(productCategoryRequest1);
+        ProductCategoryResponse productCategoryCreate2 = productCategoryService.createProductCategory(productCategoryRequest2);
 
-        // Then
-        ArgumentCaptor<ProductCategoryModel> productCategoryArgumentCaptor = ArgumentCaptor.forClass(ProductCategoryModel.class);
-        then(productCategoryRepository).should().save(productCategoryArgumentCaptor.capture());
-
-        ProductCategoryModel capturedProductCategory = productCategoryArgumentCaptor.getValue();
-
-        assertThat(capturedProductCategory.getId()).isEqualTo(productCategory.getId());
-        assertThat(capturedProductCategory.getName()).isEqualTo(productCategory.getName());
-        assertThat(capturedProductCategory.getDescription()).isEqualTo(productCategory.getDescription());
-    }
-
-    @Test
-    void getAll() {
-        // when
-        underTest.getAllProductCategories();
-
-        // then
-        then(productCategoryRepository).should().findAll();
+        List<ProductCategoryResponse> productCategories = productCategoryService.getAllProductCategories();
+        // Get the newly inserted product category which is at index 1
+        ProductCategoryResponse productCategoryResp1 = productCategories.get(1);
+        ProductCategoryResponse productCategoryResp2 = productCategories.get(2);
+        assertThat(productCategories.size()).isEqualTo(3);
+        assertThat(productCategoryResp1.getName()).isEqualTo(productCategoryCreate1.getName());
+        assertThat(productCategoryResp1.getDescription()).isEqualTo(productCategoryCreate1.getDescription());
+        assertThat(productCategoryResp2.getName()).isEqualTo(productCategoryCreate2.getName());
+        assertThat(productCategoryResp2.getDescription()).isEqualTo(productCategoryCreate2.getDescription());
     }
 
     @Test
     void getProductCategoryById() {
-        // given
-        int id = 1;
-        ProductCategoryModel productCategoryModel = ProductCategoryModel.builder()
-                .id(1)
-                .name("category 1")
-                .description("description 1")
-                .build();
-        given(productCategoryRepository.findById(id)).willReturn(Optional.of(productCategoryModel));
+        ProductCategoryResponse productCategoryResponse = productCategoryService.getProductCategoryById(productCategorySaved.getId());
 
-        // When
-        ProductCategoryResponse productCategoryResponse = underTest.getProductCategoryById(id);
-
-        // Then
-        then(productCategoryRepository).should().findById(id);
-
-        assertThat(productCategoryResponse.getId()).isEqualTo(productCategoryModel.getId());
-        assertThat(productCategoryResponse.getName()).isEqualTo(productCategoryModel.getName());
-        assertThat(productCategoryResponse.getDescription()).isEqualTo(productCategoryModel.getDescription());
+        assertThat(productCategoryResponse.getId()).isEqualTo(productCategorySaved.getId());
+        assertThat(productCategoryResponse.getName()).isEqualTo(productCategorySaved.getName());
+        assertThat(productCategoryResponse.getDescription()).isEqualTo(productCategorySaved.getDescription());
     }
 }

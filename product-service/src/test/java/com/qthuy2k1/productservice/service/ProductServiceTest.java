@@ -11,169 +11,141 @@ import com.qthuy2k1.productservice.repository.ProductRepository;
 import com.qthuy2k1.productservice.repository.feign.InventoryClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.*;
 
-@ExtendWith(MockitoExtension.class)
-public class ProductServiceTest {
+@SpringBootTest
+public class ProductServiceTest extends AbstractIntegrationTest {
     private final ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
-    @Mock
+    private final String PRICE_FORMAT = "#.00";
+    private final DecimalFormat decimalFormatPrice = new DecimalFormat(PRICE_FORMAT);
+    private ProductModel productSaved;
+    private Integer productCategorySavedId;
+    @Autowired
     private ProductRepository productRepository;
-    @Mock
+    @Autowired
     private ProductCategoryRepository productCategoryRepository;
-    @Mock
+    @MockBean
     private InventoryClient inventoryClient;
-    @InjectMocks
-    private ProductService underTest;
+    @Autowired
+    private IProductService productService;
 
     @BeforeEach
     void setUp() {
-        underTest = new ProductService(productRepository, productCategoryRepository, inventoryClient, productMapper);
+        productRepository.deleteAll();
+
+        ProductCategoryModel productCategoryModel = productCategoryRepository.save(ProductCategoryModel.builder()
+                .name("Category 1")
+                .description("Description of Category 1")
+                .products(Set.of())
+                .build());
+        productSaved = productRepository.save(ProductModel.builder()
+                .name("Product 999")
+                .description("Product description 999")
+                .price(BigDecimal.valueOf(1))
+                .category(productCategoryModel)
+                .skuCode("abc")
+                .build());
+
+        productCategorySavedId = productCategoryModel.getId();
+    }
+
+    @Test
+    public void testConnection() {
+        assertThat(postgres.isRunning()).isTrue();
+        assertThat(REDIS_CONTAINER.isRunning()).isTrue();
     }
 
 
     @Test
-    void createProduct() {
+    void create_And_GetAll_Product() {
         // Given
-        ProductRequest productRequest = ProductRequest.builder()
+        ProductRequest productRequest1 = ProductRequest.builder()
                 .name("Product 1")
                 .description("Product description 1")
                 .price(BigDecimal.valueOf(1))
-                .categoryId(1)
+                .categoryId(productCategorySavedId)
                 .skuCode("abc")
                 .quantity(1)
                 .build();
-        ProductCategoryModel productCategory = new ProductCategoryModel(1, "abc", "abc", Set.of());
+        ProductRequest productRequest2 = ProductRequest.builder()
+                .name("Product 2")
+                .description("Product description 2")
+                .price(BigDecimal.valueOf(1))
+                .categoryId(productCategorySavedId)
+                .skuCode("abc")
+                .quantity(1)
+                .build();
 
-        ProductModel productModel = productMapper.toProduct(productRequest);
-        productModel.setCategory(productCategory);
+        ProductResponse productCreate1 = productService.createProduct(productRequest1);
+        ProductResponse productCreate2 = productService.createProduct(productRequest2);
 
-        given(productCategoryRepository.findById(productRequest.getCategoryId())).willReturn(Optional.of(productCategory));
+        List<ProductResponse> products = productService.getAllProducts();
+        // Get the newly inserted product which is at index 1
+        ProductResponse productResp1 = products.get(1);
+        ProductResponse productResp2 = products.get(2);
 
-
-        // When
-        when(productRepository.save(any())).thenReturn(productModel);
-        underTest.createProduct(productRequest);
-
-        // Then
-        ArgumentCaptor<ProductModel> productArgumentCaptor = ArgumentCaptor.forClass(ProductModel.class);
-        then(productRepository).should().save(productArgumentCaptor.capture());
-
-        ProductModel capturedProduct = productArgumentCaptor.getValue();
-
-        assertThat(capturedProduct.getName()).isEqualTo(productModel.getName());
-        assertThat(capturedProduct.getDescription()).isEqualTo(productModel.getDescription());
-        assertThat(capturedProduct.getPrice()).isEqualTo(productModel.getPrice());
-        assertThat(capturedProduct.getCategory().getId()).isEqualTo(productModel.getCategory().getId());
-    }
-
-    @Test
-    void getAllProducts() {
-        // When
-        underTest.getAllProducts();
-
-        // Then
-        then(productRepository).should().findAll();
+        // The product list size should be 3 (1 existing product plus 2 newly inserted products)
+        assertThat(products.size()).isEqualTo(3);
+        assertThat(productResp1.getName()).isEqualTo(productCreate1.getName());
+        assertThat(productResp1.getDescription()).isEqualTo(productCreate1.getDescription());
+        assertThat(productResp1.getPrice()).isEqualTo(decimalFormatPrice.format(productCreate1.getPrice()));
+        assertThat(productResp1.getCategory().getId()).isEqualTo(productCreate1.getCategory().getId());
+        assertThat(productResp1.getSkuCode()).isEqualTo(productCreate1.getSkuCode());
+        assertThat(productResp2.getName()).isEqualTo(productCreate2.getName());
+        assertThat(productResp2.getDescription()).isEqualTo(productCreate2.getDescription());
+        assertThat(productResp2.getPrice()).isEqualTo(decimalFormatPrice.format(productCreate2.getPrice()));
+        assertThat(productResp2.getCategory().getId()).isEqualTo(productCreate2.getCategory().getId());
+        assertThat(productResp2.getSkuCode()).isEqualTo(productCreate2.getSkuCode());
     }
 
     @Test
     void deleteProductById() {
-        // given
-        ProductCategoryModel productCategory = ProductCategoryModel.builder()
-                .id(1)
-                .name("category 1")
-                .description("description 1")
-                .build();
-        ProductModel product = ProductModel.builder()
-                .id(1)
-                .name("product 1")
-                .description("des 1")
-                .price(BigDecimal.valueOf(1))
-                .category(productCategory)
-                .build();
-        given(productRepository.findById(product.getId())).willReturn(Optional.of(product));
+        // delete the existing product in db
+        productService.deleteProductById(productSaved.getId());
 
-        // When
-        underTest.deleteProductById(product.getId());
-
-        // Then
-        then(productRepository).should().delete(product);
+        List<ProductResponse> products = productService.getAllProducts();
+        // The product list size should be 0
+        assertThat(products.size()).isEqualTo(0);
     }
 
     @Test
     void deleteProductById_ExceptionThrown_ProductNotFound() {
-        // given
-        int id = 1;
-        given(productRepository.findById(id)).willReturn(Optional.empty());
-
-        // When
+        int id = productSaved.getId() + 1; // Ensure a non-existent ID
         assertThatThrownBy(() ->
-                underTest.deleteProductById(id))
+                productService.deleteProductById(id))
                 .hasMessageContaining(ErrorCode.PRODUCT_NOT_FOUND.getMessage());
 
-        // Then
-        then(productRepository).should(never()).delete(any());
     }
 
     @Test
     void getProductById() {
-        // given
-        int id = 1;
-        ProductCategoryModel productCategory = ProductCategoryModel.builder()
-                .id(1)
-                .name("category 1")
-                .description("description 1")
-                .build();
-        ProductModel productModel = ProductModel.builder()
-                .id(1)
-                .name("product 1")
-                .description("des 1")
-                .price(BigDecimal.valueOf(1))
-                .category(productCategory)
-                .skuCode("ABC")
-                .build();
-        ProductResponse productModelResponse = productMapper.toProductResponse(productModel);
-        given(productRepository.findById(id)).willReturn(Optional.of(productModel));
+        ProductResponse product = productService.getProductById(productSaved.getId());
 
-        // When
-        ProductResponse product = underTest.getProductById(id);
-
-        // Then
-        assertThat(product.getId()).isEqualTo(productModelResponse.getId());
-        assertThat(product.getName()).isEqualTo(productModelResponse.getName());
-        assertThat(product.getDescription()).isEqualTo(productModelResponse.getDescription());
-        assertThat(product.getPrice()).isEqualTo(productModelResponse.getPrice());
-        assertThat(product.getSkuCode()).isEqualTo(productModelResponse.getSkuCode());
-
-        then(productRepository).should().findById(id);
+        assertThat(product.getId()).isEqualTo(productSaved.getId());
+        assertThat(product.getName()).isEqualTo(productSaved.getName());
+        assertThat(product.getDescription()).isEqualTo(productSaved.getDescription());
+        assertThat(product.getPrice()).isEqualTo(decimalFormatPrice.format(productSaved.getPrice()));
+        assertThat(product.getSkuCode()).isEqualTo(productSaved.getSkuCode());
     }
+
 
     @Test
     void getProductById_ExceptionThrown_ProductNotFound() {
-        // given
-        int id = 1;
-        given(productRepository.findById(id)).willReturn(Optional.empty());
-
-        // When
+        int id = productSaved.getId() + 1; // Ensure a non-existent ID
         assertThatThrownBy(() ->
-                underTest.getProductById(id))
+                productService.getProductById(id))
                 .hasMessageContaining(ErrorCode.PRODUCT_NOT_FOUND.getMessage());
-
-        // Then
-        then(productRepository).should().findById(any());
     }
 
 }
