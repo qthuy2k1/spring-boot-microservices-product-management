@@ -11,7 +11,10 @@ import com.qthuy2k1.orderservice.mapper.OrderItemMapper;
 import com.qthuy2k1.orderservice.mapper.OrderMapper;
 import com.qthuy2k1.orderservice.model.OrderItemModel;
 import com.qthuy2k1.orderservice.model.OrderModel;
+import com.qthuy2k1.orderservice.model.ProductReportList;
+import com.qthuy2k1.orderservice.model.ReportModel;
 import com.qthuy2k1.orderservice.repository.OrderItemRepository;
+import com.qthuy2k1.orderservice.repository.OrderReportRepository;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
@@ -33,6 +36,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -43,9 +47,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class OrderService {
+public class OrderService implements IOrderService {
     OrderRepository orderRepository;
     OrderItemRepository orderItemRepository;
+    OrderReportRepository orderReportRepository;
     KafkaTemplate<String, OrderPlaced> kafkaTemplate;
     @LoadBalanced
     WebClient.Builder webClientBuilder;
@@ -54,6 +59,8 @@ public class OrderService {
     InventoryClient inventoryClient;
     OrderMapper orderMapper;
     OrderItemMapper orderItemMapper;
+    private final String PRICE_FORMAT = "#.00";
+    private final String PERIOD_DAYS = " day(s)";
 
     @Transactional
     public OrderResponse createOrder(OrderRequest orderRequest) throws ExecutionException, InterruptedException {
@@ -142,11 +149,8 @@ public class OrderService {
                     orderModel.setUserId(user.getId());
                     orderModel.setOrderItems(orderItemModels);
 
-                    log.info("BEFORE SAVING {}", orderModel);
                     // store to db and get the order back
                     OrderModel orderSaved = orderRepository.save(orderModel);
-
-                    log.info("SAVEDDDDD {}", orderSaved);
 
                     orderItemModels.forEach(orderItem -> orderItem.setOrder(orderSaved));
                     List<OrderItemModel> orderItemModelSaved = orderItemRepository.saveAll(orderItemModels);
@@ -282,5 +286,48 @@ public class OrderService {
         OrderModel order = orderRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         order.setStatus(orderRequest.getStatus());
         orderRepository.save(order);
+    }
+
+    public ReportResponse getReport(String startDate, String endDate) {
+        ReportModel report = orderReportRepository.getOrderReport(startDate, endDate);
+        ReportResponse reportResponse = toReportResponse(report);
+
+        // get the product response list
+        List<ProductReportList> productReportList = orderReportRepository.getProductReportList();
+        String productIds = productReportList.stream()
+                .map(productReport -> String.valueOf(productReport.getProduct_id()))
+                .collect(Collectors.joining(","));
+        ApiResponse<List<ProductResponse>> productListResp = productClient.getProductsByListId(productIds);
+        if (productListResp.getResult() == null) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        // map product list to a hashmap(productid, product)
+        Map<Integer, ProductResponse> productList = productListResp
+                .getResult()
+                .stream()
+                .collect(Collectors.toMap(ProductResponse::getId, product -> product));
+
+        List<ProductResponse> productReportListResponse = new ArrayList<>();
+        productReportList.forEach(productReport -> {
+            productReportListResponse.add(productList.get(productReport.getProduct_id()));
+        });
+
+        reportResponse.setTopSellingProducts(productReportListResponse);
+        return reportResponse;
+    }
+
+    private ReportResponse toReportResponse(ReportModel report) {
+        return ReportResponse.builder()
+                .reportPeriod(report.getPeriod() + PERIOD_DAYS)
+                .totalOrders(report.getTotalorders())
+                .avgOrderValue(new DecimalFormat(PRICE_FORMAT).format(report.getAvgordervalue()))
+                .newCustomers(report.getNewcustomers())
+                .returningCustomers(report.getReturningcustomers())
+                .pending(report.getPending())
+                .shipped(report.getShipped())
+                .processing(report.getProcessing())
+                .delivered(report.getDelivered())
+                .canceled(report.getCanceled())
+                .build();
     }
 }

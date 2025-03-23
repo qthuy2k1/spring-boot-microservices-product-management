@@ -1,7 +1,7 @@
 package com.qthuy2k1.orderservice.controller;
 
 import com.qthuy2k1.orderservice.dto.response.OrderGraphQLResponse;
-import com.qthuy2k1.orderservice.service.OrderService;
+import com.qthuy2k1.orderservice.service.IOrderService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderGraphQLController {
-    OrderService orderService;
+    IOrderService orderService;
 
     @QueryMapping
     public List<OrderGraphQLResponse> getOrders() {

@@ -15,7 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class OrderItemService {
+public class OrderItemService implements IOrderItemService {
     OrderItemRepository orderItemRepository;
     OrderItemMapper orderItemMapper;
 
