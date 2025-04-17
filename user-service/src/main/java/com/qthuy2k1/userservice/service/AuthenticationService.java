@@ -6,9 +6,6 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.qthuy2k1.userservice.dto.request.AuthenticationRequest;
-import com.qthuy2k1.userservice.dto.request.IntrospectRequest;
-import com.qthuy2k1.userservice.dto.request.LogoutRequest;
-import com.qthuy2k1.userservice.dto.request.RefreshTokenRequest;
 import com.qthuy2k1.userservice.dto.response.AuthenticationResponse;
 import com.qthuy2k1.userservice.dto.response.IntrospectResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
@@ -52,8 +49,8 @@ public class AuthenticationService implements IAuthenticationService {
     @Value("${spring.jwt.signerKey}")
     String SIGNER_KEY;
 
-    public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
-        String token = request.getToken();
+    public IntrospectResponse introspect(String authorizationHeader) throws JOSEException, ParseException {
+        String token = extractToken(authorizationHeader);
         boolean isValid = true;
 
         try {
@@ -84,9 +81,10 @@ public class AuthenticationService implements IAuthenticationService {
                 .build();
     }
 
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+    public void logout(String authorizationHeader) throws ParseException, JOSEException {
+        String token = extractToken(authorizationHeader);
         try {
-            var signToken = verifyToken(request.getToken(), true);
+            var signToken = verifyToken(token, true);
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
@@ -99,11 +97,11 @@ public class AuthenticationService implements IAuthenticationService {
         } catch (AppException e) {
             log.info("token already expired");
         }
-
     }
 
-    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
-        SignedJWT signJWT = verifyToken(request.getToken(), true);
+    public AuthenticationResponse refreshToken(String authorizationHeader) throws ParseException, JOSEException {
+        String token = extractToken(authorizationHeader);
+        SignedJWT signJWT = verifyToken(token, true);
 
         String jit = signJWT.getJWTClaimsSet().getJWTID();
         Date expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
@@ -119,10 +117,10 @@ public class AuthenticationService implements IAuthenticationService {
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        String token = generateToken(user);
+        String newToken = generateToken(user);
 
         return AuthenticationResponse.builder()
-                .token(token)
+                .token(newToken)
                 .authenticated(true)
                 .build();
     }
@@ -192,5 +190,16 @@ public class AuthenticationService implements IAuthenticationService {
         }
 
         return stringJoiner.toString();
+    }
+
+    private String extractToken(String authorizationHeader) {
+        // Remove "Bearer " prefix
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+
+        log.info("cannot extract token");
+        log.info("authorizationHeader: {}", authorizationHeader);
+        return null;
     }
 }

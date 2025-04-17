@@ -36,11 +36,9 @@ public class RoleService implements IRoleService {
         Role role = roleMapper.toRole(request);
         List<Permission> permissions = permissionRepository.findAllById(request.getPermissions());
         // permission request is not existed
-        if (permissions.isEmpty()) {
-            throw new AppException(ErrorCode.PERMISSION_NOT_FOUND);
+        if (!permissions.isEmpty()) {
+            role.setPermissions(new HashSet<>(permissions));
         }
-        role.setPermissions(new HashSet<>(permissions));
-
         return roleMapper.toRoleResponse(roleRepository.save(role));
     }
 

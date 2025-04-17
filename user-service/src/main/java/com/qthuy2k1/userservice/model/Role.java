@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -18,6 +19,16 @@ public class Role {
     String name;
     String description;
 
+    @ManyToMany(mappedBy = "roles")
+    @EqualsAndHashCode.Exclude
+    Set<UserModel> users = new HashSet<>();
+
     @ManyToMany(fetch = FetchType.EAGER)
-    Set<Permission> permissions;
+    @JoinTable(
+            name = "roles_tbl_permissions",
+            joinColumns = @JoinColumn(name = "roles_tbl_name"),
+            inverseJoinColumns = @JoinColumn(name = "permissions_tbl_name")
+    )
+    @EqualsAndHashCode.Exclude
+    Set<Permission> permissions = new HashSet<>();
 }

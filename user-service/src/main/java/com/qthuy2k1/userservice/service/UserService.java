@@ -3,7 +3,6 @@ package com.qthuy2k1.userservice.service;
 import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
-import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.enums.RoleEnum;
@@ -43,7 +42,7 @@ public class UserService implements IUserService {
     PasswordEncoder passwordEncoder;
     UserMapper userMapper;
     RoleRepository roleRepository;
-    RoleService roleService;
+    IRoleService roleService;
     RoleMapper roleMapper;
 
 
@@ -60,17 +59,15 @@ public class UserService implements IUserService {
 
         // Check if user role already existed
         Optional<Role> roleOptional = roleRepository.findById(RoleEnum.USER.name());
-        if (roleOptional.isEmpty()) {
-            RoleResponse role = roleService.create(
-                    RoleRequest.builder()
-                            .name(RoleEnum.USER.name())
-                            .description("user role description")
-                            .permissions(Set.of())
-                            .build()
-            );
-            user.setRoles(Set.of(roleMapper.toRole(role)));
-        }
+        Role role = roleOptional.orElseGet(() -> roleMapper.toRole(roleService.create(
+                RoleRequest.builder()
+                        .name(RoleEnum.USER.name())
+                        .description("user role description")
+                        .permissions(Set.of())
+                        .build()
+        )));
 
+        user.setRoles(Set.of(role));
         user = userRepository.save(user);
 
         // Produce the message to kafka
@@ -104,8 +101,12 @@ public class UserService implements IUserService {
         userMapper.updateUser(user, userRequest);
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-        List<Role> roles = roleRepository.findAllById(userRequest.getRoles());
-        user.setRoles(new HashSet<>(roles));
+        if (!userRequest.getRoles().isEmpty()) {
+            List<Role> roles = roleRepository.findAllById(userRequest.getRoles());
+            if (!roles.isEmpty()) {
+                user.setRoles(new HashSet<>(roles));
+            }
+        }
 
         return userMapper.toUserResponse(userRepository.save(user));
     }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -36,11 +37,11 @@ public class UserModel {
     String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    Set<Role> roles;
-
-    public UserModel(String name, String email, String password) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-    }
+    @JoinTable(
+            name = "users_tbl_roles",
+            joinColumns = @JoinColumn(name = "users_tbl_id"),
+            inverseJoinColumns = @JoinColumn(name = "roles_tbl_name")
+    )
+    @EqualsAndHashCode.Exclude
+    Set<Role> roles = new HashSet<>();
 }

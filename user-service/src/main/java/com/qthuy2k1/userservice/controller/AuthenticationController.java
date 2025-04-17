@@ -2,21 +2,17 @@ package com.qthuy2k1.userservice.controller;
 
 import com.nimbusds.jose.JOSEException;
 import com.qthuy2k1.userservice.dto.request.AuthenticationRequest;
-import com.qthuy2k1.userservice.dto.request.IntrospectRequest;
-import com.qthuy2k1.userservice.dto.request.LogoutRequest;
-import com.qthuy2k1.userservice.dto.request.RefreshTokenRequest;
 import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.AuthenticationResponse;
 import com.qthuy2k1.userservice.dto.response.IntrospectResponse;
+import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.service.IAuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -37,23 +33,25 @@ public class AuthenticationController {
     }
 
     @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
+    ApiResponse<IntrospectResponse> introspect(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader)
             throws ParseException, JOSEException {
         return ApiResponse.<IntrospectResponse>builder()
-                .result(authenticationService.introspect(request))
+                .result(authenticationService.introspect(authorizationHeader))
                 .build();
     }
 
     @PostMapping("/logout")
-    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
-        authenticationService.logout(request);
-        return ApiResponse.<Void>builder().build();
+    ApiResponse<String> logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws ParseException, JOSEException {
+        authenticationService.logout(authorizationHeader);
+        return ApiResponse.<String>builder()
+                .result(MessageResponse.SUCCESS)
+                .build();
     }
 
     @PostMapping("/refresh-token")
-    ApiResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest request)
+    ApiResponse<AuthenticationResponse> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader)
             throws ParseException, JOSEException {
-        AuthenticationResponse authenticationResponse = authenticationService.refreshToken(request);
+        AuthenticationResponse authenticationResponse = authenticationService.refreshToken(authorizationHeader);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(authenticationResponse)
                 .build();
