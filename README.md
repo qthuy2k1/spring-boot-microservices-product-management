@@ -1,28 +1,84 @@
 # PRODUCT MANAGEMENT API
 
+#### Technologies in use:
+
+* Coding: Spring Boot, Spring Security, Spring Cloud
+* RDBMS: PosgreSQL, MongoDB
+* Messaging: Kafka
+* Containerization: Docker
+* Orchestration: Kubernetes
+* Caching: Redis
+* Api Layer: GraphQL
+* Unit test: testcontainers
+
+#### Services:
+
+* Eureka Server (Service Discovery): a service registry and discovery service for all other microservices in the system.
+* Api Gateway: a single entry point for all client requests to the microservices.
+* User Service:
+    * Manage user accounts and profiles within the system.
+    * User registration and authentication (login, logout).
+    * User role and permission management.
+* Product Service:
+    * Manages information about the products offered in the system.
+    * Product catalog management (adding, updating, deleting products).
+    * Storing product details (name, description, price, SKU, category, etc.).
+    * Interacts with the Inventory Service to check product availability.
+* Payment Service:
+    * Handles all payment-related operations within the system.
+    * Processing payments (integrating with VNPay).
+    * Interact with the Order Service to update order statuses after payment.
+* Order Service:
+    * Manages the creation, processing, and tracking of customer orders.
+    * Creating new orders based on user selections.
+    * Managing order statuses.
+    * Calculating order totals.
+    * Managing order items and quantities.
+    * Interacting with the Inventory Service to reduce stock levels. (working...)
+* Notification Service:
+    * Handles sending various types of notifications to users.
+    * Sending email notifications.
+    * Subscribe to events from other services
+* Inventory Service:
+    * Manages the stock levels and availability of products.
+    * Tracking the quantity of each product in stock.
+    * Updating stock levels based on orders and returns.
+    * Providing information about product availability to other services (Product and Order services).
+
 ## Steps to Setup
 
-**1. Clone the application**
+1. **Clone the Repository**
 
-```bash
-git clone https://github.com/qthuy2k1/spring-boot-microservices-product-management.git
-```
+  ```bash
+  git clone https://github.com/qthuy2k1/spring-boot-microservices-product-management.git
+  cd spring-boot-microservices-product-management
+  ```
 
-**2. Run the docker compose file**
+2. **Start Docker Compose**
 
-```bash
-docker compose -f docker-compose.local.yml up
-```
+* This will start all necessary infrastructure services (databases, Kafka, Redis, Eureka, etc.).
 
-**3. Run the app using maven**
+  ```bash
+  docker compose -f docker-compose.local.yml up -d
+  ```
 
-Change the directory to each service folder and run:
+3. **Run Microservices with Maven:**
 
-```bash
-mvn spring-boot:run
-```
+* Navigate to each microservice directory (e.g., `user-service`, `product-service`).
+* Run the Spring Boot application using Maven:
 
-After running all services, the app will start running at <http://localhost:8080>
+  ```bash
+  cd user-service
+  mvn spring-boot:run
+  ```
+
+* Repeat this for each microservice.
+
+4. **Access the Application:**
+
+* Once all services are running, the API Gateway will be available at `http://localhost:8080`.
+
+* You can then access the different microservices through the gateway, or directly via their own URLs.
 
 ## Explore Rest APIs
 
