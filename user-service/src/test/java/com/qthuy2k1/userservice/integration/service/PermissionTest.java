@@ -1,8 +1,9 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.integration.service;
 
 import com.qthuy2k1.userservice.dto.request.PermissionRequest;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
+import com.qthuy2k1.userservice.service.PermissionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @DirtiesContext
 public class PermissionTest extends BaseServiceTest {
     @Autowired
-    private IPermissionService permissionService;
+    private PermissionService permissionService;
 
     @Test
     void create_And_GetAll_Permission() {

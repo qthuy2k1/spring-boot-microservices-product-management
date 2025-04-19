@@ -1,9 +1,10 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.integration.service;
 
 import com.qthuy2k1.userservice.dto.request.RoleRequest;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
+import com.qthuy2k1.userservice.service.RoleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

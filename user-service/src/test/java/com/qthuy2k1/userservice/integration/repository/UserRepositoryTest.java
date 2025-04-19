@@ -1,6 +1,7 @@
-package com.qthuy2k1.userservice.repository;
+package com.qthuy2k1.userservice.integration.repository;
 
 import com.qthuy2k1.userservice.model.UserModel;
+import com.qthuy2k1.userservice.repository.UserRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

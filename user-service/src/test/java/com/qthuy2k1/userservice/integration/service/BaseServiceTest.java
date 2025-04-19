@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.integration.service;
 
 import com.qthuy2k1.userservice.mapper.PermissionMapper;
 import com.qthuy2k1.userservice.mapper.RoleMapper;
@@ -28,33 +28,33 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Testcontainers
 public abstract class BaseServiceTest {
-    protected static final int REDIS_PORT = 6379;
+    static final int REDIS_PORT = 6379;
     @Container
-    protected static final RedisContainer redisContainer =
+    static final RedisContainer redisContainer =
             new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine"))
                     .withExposedPorts(REDIS_PORT);
-    protected static final String USER_PASSWORD = "123123";
+    static final String USER_PASSWORD = "123123";
     @Container
-    protected static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
             "postgres:16-alpine"
     );
-    protected final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
-    protected final PermissionMapper permissionMapper = Mappers.getMapper(PermissionMapper.class);
+    final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
+    final PermissionMapper permissionMapper = Mappers.getMapper(PermissionMapper.class);
     @Autowired
-    protected PasswordEncoder passwordEncoder;
-    protected UserModel userSaved;
-    protected Role userRoleSaved;
-    protected Role adminRoleSaved;
-    protected Permission permissionReadSaved;
-    protected Permission permissionWriteSaved;
+    PasswordEncoder passwordEncoder;
+    UserModel userSaved;
+    Role userRoleSaved;
+    Role adminRoleSaved;
+    Permission permissionReadSaved;
+    Permission permissionWriteSaved;
     @Autowired
-    protected UserRepository userRepository;
+    UserRepository userRepository;
     @Autowired
-    protected RoleRepository roleRepository;
+    RoleRepository roleRepository;
     @Autowired
-    protected PermissionRepository permissionRepository;
+    PermissionRepository permissionRepository;
     @Autowired
-    protected InvalidatedRepository invalidatedRepository;
+    InvalidatedRepository invalidatedRepository;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.integration.service;
 
 import com.qthuy2k1.userservice.dto.request.UserRequest;
 import com.qthuy2k1.userservice.dto.request.UserUpdateRequest;
@@ -6,6 +6,7 @@ import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.event.UserCreated;
+import com.qthuy2k1.userservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,7 +32,7 @@ class UserServiceTest extends BaseServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
-    private IUserService userService;
+    private UserService userService;
 
     @Test
     void create_And_GetAll_Users() {

@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.integration.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +9,6 @@ import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.mapper.PermissionMapper;
-import com.qthuy2k1.userservice.mapper.RoleMapper;
 import com.qthuy2k1.userservice.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @DirtiesContext
 public class RoleControllerTest extends BaseControllerTest {
-    private final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
     private final PermissionMapper permissionMapper = Mappers.getMapper(PermissionMapper.class);
     @Autowired
     private ObjectMapper objectMapper;

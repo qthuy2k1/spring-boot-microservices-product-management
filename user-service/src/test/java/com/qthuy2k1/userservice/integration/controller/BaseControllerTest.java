@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.integration.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,13 +41,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @AutoConfigureMockMvc
 public abstract class BaseControllerTest {
-    protected static final int REDIS_PORT = 6379;
+    static final int REDIS_PORT = 6379;
     @Container
-    protected static final RedisContainer redisContainer =
+    static final RedisContainer redisContainer =
             new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine"))
                     .withExposedPorts(REDIS_PORT);
-    protected static final int DEFAULT_CODE_RESPONSE = 1000;
-    protected static final String USER_PASSWORD = "123123";
+    static final int DEFAULT_CODE_RESPONSE = 1000;
+    static final String USER_PASSWORD = "123123";
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             "postgres:16-alpine"
@@ -57,14 +57,14 @@ public abstract class BaseControllerTest {
             "confluentinc/cp-kafka:7.4.0"
     );
     @Autowired
-    protected MockMvc mockMvc;
+    MockMvc mockMvc;
     @Autowired
-    protected ObjectMapper objectMapper;
-    protected UserModel userSaved1;
-    protected UserModel userSaved2;
-    protected Role userRoleSaved;
-    protected Role adminRoleSaved;
-    protected Permission permissionSaved;
+    ObjectMapper objectMapper;
+    UserModel userSaved1;
+    UserModel userSaved2;
+    Role userRoleSaved;
+    Role adminRoleSaved;
+    Permission permissionSaved;
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired

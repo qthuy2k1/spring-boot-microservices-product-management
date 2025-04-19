@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.integration.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

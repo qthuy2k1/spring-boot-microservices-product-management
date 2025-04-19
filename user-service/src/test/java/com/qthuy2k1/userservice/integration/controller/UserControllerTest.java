@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.controller;
+package com.qthuy2k1.userservice.integration.controller;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,7 +11,6 @@ import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.mapper.RoleMapper;
-import com.qthuy2k1.userservice.mapper.UserMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -42,7 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext
 class UserControllerTest extends BaseControllerTest {
     private final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
-    private final UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
     @Test
     void signup_And_GetAll() throws Exception {
@@ -101,6 +99,32 @@ class UserControllerTest extends BaseControllerTest {
         assertThat(userCreated.getName()).isEqualTo(createUserApiResponse.getResult().getName());
         assertThat(userCreated.getEmail()).isEqualTo(createUserApiResponse.getResult().getEmail());
         assertThat(userCreated.getRoles()).isEqualTo(createUserApiResponse.getResult().getRoles());
+    }
+
+    @Test
+    void getAllUsers() throws Exception {
+        String authToken = login();
+        MvcResult getAllUsersResult = mockMvc.perform(get("/users")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ApiResponse<List<UserResponse>> getAllUsersApiResponse = objectMapper.readValue(
+                getAllUsersResult.getResponse().getContentAsByteArray(),
+                new TypeReference<ApiResponse<List<UserResponse>>>() {
+                }
+        );
+
+        assertThat(getAllUsersApiResponse).isNotNull();
+        assertThat(getAllUsersApiResponse.getResult().size()).isEqualTo(2);
+
+        UserResponse userCreated = getAllUsersApiResponse.getResult().getFirst();
+        assertThat(userCreated.getName()).isEqualTo(userSaved1.getName());
+        assertThat(userCreated.getEmail()).isEqualTo(userSaved1.getEmail());
+        Set<RoleResponse> userSaved1RoleResponse = userSaved1.getRoles().stream().map(roleMapper::toRoleResponse).collect(Collectors.toSet());
+        assertThat(userCreated.getRoles()).isEqualTo(userSaved1RoleResponse);
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.qthuy2k1.productservice.service;
+package com.qthuy2k1.productservice.integration.service;
 
 import com.redis.testcontainers.RedisContainer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @Testcontainers
-public abstract class AbstractIntegrationTest {
+public abstract class BaseServiceTest {
 
     protected static final int REDIS_PORT = 6379;
 

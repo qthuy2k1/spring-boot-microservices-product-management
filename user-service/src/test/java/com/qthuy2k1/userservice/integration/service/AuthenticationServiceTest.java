@@ -1,4 +1,4 @@
-package com.qthuy2k1.userservice.service;
+package com.qthuy2k1.userservice.integration.service;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -10,6 +10,7 @@ import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.exception.AppException;
 import com.qthuy2k1.userservice.model.InvalidatedToken;
 import com.qthuy2k1.userservice.repository.InvalidatedRepository;
+import com.qthuy2k1.userservice.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class AuthenticationServiceTest extends BaseServiceTest {
     @Value("${spring.jwt.signerKey}")
     String SIGNER_KEY;
     @Autowired
-    private IAuthenticationService authenticationService;
+    private AuthenticationService authenticationService;
     @Autowired
     private InvalidatedRepository invalidatedRepository;
     private String token;

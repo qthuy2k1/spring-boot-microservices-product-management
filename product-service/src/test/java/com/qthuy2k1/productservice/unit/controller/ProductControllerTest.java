@@ -1,7 +1,8 @@
-package com.qthuy2k1.productservice.controller;
+package com.qthuy2k1.productservice.unit.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.productservice.controller.ProductController;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.MessageResponse;
@@ -9,7 +10,7 @@ import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
 import com.qthuy2k1.productservice.exception.AppException;
-import com.qthuy2k1.productservice.service.ProductService;
+import com.qthuy2k1.productservice.service.IProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +52,7 @@ public class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @MockBean
-    private ProductService productService;
+    private IProductService productService;
     @InjectMocks
     private ProductController productController;
 

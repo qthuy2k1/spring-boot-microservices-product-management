@@ -1,6 +1,8 @@
 package com.qthuy2k1.productservice.integration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.productservice.model.ProductCategoryModel;
+import com.qthuy2k1.productservice.model.ProductModel;
 import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
 import com.qthuy2k1.productservice.repository.ProductRepository;
 import com.redis.testcontainers.RedisContainer;
@@ -17,6 +19,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -38,12 +42,15 @@ public abstract class BaseControllerTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+    ProductModel productSaved1;
+    ProductModel productSaved2;
+    ProductCategoryModel productCategorySaved;
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired
-    private ProductCategoryRepository productCategoryRepository;
-    @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private ProductCategoryRepository productCategoryRepository;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -61,6 +68,28 @@ public abstract class BaseControllerTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
+
+        productRepository.deleteAll();
+        productCategoryRepository.deleteAll();
+
+        productCategorySaved = productCategoryRepository.save(ProductCategoryModel.builder()
+                .name("Category 1")
+                .description("Description of Category 1")
+                .build());
+        productSaved1 = productRepository.save(ProductModel.builder()
+                .name("Product 991")
+                .description("Product description 991")
+                .price(BigDecimal.valueOf(1000))
+                .category(productCategorySaved)
+                .skuCode("abc")
+                .build());
+        productSaved2 = productRepository.save(ProductModel.builder()
+                .name("Product 992")
+                .description("Product description 992")
+                .price(BigDecimal.valueOf(2000))
+                .category(productCategorySaved)
+                .skuCode("abc")
+                .build());
     }
 
     @Test

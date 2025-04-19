@@ -1,10 +1,11 @@
-package com.qthuy2k1.productservice.controller;
+package com.qthuy2k1.productservice.unit.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qthuy2k1.productservice.controller.ProductCategoryController;
 import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
-import com.qthuy2k1.productservice.service.ProductCategoryService;
+import com.qthuy2k1.productservice.service.IProductCategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ public class ProductCategoryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @MockBean
-    private ProductCategoryService productCategoryService;
+    private IProductCategoryService productCategoryService;
     @InjectMocks
     private ProductCategoryController productCategoryController;
 

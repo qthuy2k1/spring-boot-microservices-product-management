@@ -1,10 +1,11 @@
-package com.qthuy2k1.productservice.service;
+package com.qthuy2k1.productservice.integration.service;
 
 import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
 import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
 import com.qthuy2k1.productservice.mapper.ProductCategoryMapper;
 import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
+import com.qthuy2k1.productservice.service.ProductCategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -20,12 +21,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
 @Testcontainers
-public class ProductCategoryServiceTest extends AbstractIntegrationTest {
+public class ProductCategoryServiceTest extends BaseServiceTest {
     private final ProductCategoryMapper productCategoryMapper = Mappers.getMapper(ProductCategoryMapper.class);
     @Autowired
     private ProductCategoryRepository productCategoryRepository;
     @Autowired
-    private IProductCategoryService productCategoryService;
+    private ProductCategoryService productCategoryService;
     private ProductCategoryModel productCategorySaved;
 
     @BeforeEach

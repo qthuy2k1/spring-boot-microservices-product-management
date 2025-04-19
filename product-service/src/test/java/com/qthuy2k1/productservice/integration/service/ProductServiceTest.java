@@ -1,17 +1,16 @@
-package com.qthuy2k1.productservice.service;
+package com.qthuy2k1.productservice.integration.service;
 
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
-import com.qthuy2k1.productservice.mapper.ProductMapper;
 import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.model.ProductModel;
 import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
 import com.qthuy2k1.productservice.repository.ProductRepository;
 import com.qthuy2k1.productservice.repository.feign.InventoryClient;
+import com.qthuy2k1.productservice.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,10 +24,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
-public class ProductServiceTest extends AbstractIntegrationTest {
-    private final ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
-    private final String PRICE_FORMAT = "#.00";
-    private final DecimalFormat decimalFormatPrice = new DecimalFormat(PRICE_FORMAT);
+public class ProductServiceTest extends BaseServiceTest {
+    private final DecimalFormat decimalFormatPrice = new DecimalFormat("#.00");
     private ProductModel productSaved;
     private Integer productCategorySavedId;
     @Autowired
@@ -38,7 +35,7 @@ public class ProductServiceTest extends AbstractIntegrationTest {
     @MockBean
     private InventoryClient inventoryClient;
     @Autowired
-    private IProductService productService;
+    private ProductService productService;
 
     @BeforeEach
     void setUp() {
