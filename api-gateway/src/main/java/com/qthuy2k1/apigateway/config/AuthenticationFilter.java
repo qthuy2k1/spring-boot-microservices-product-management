@@ -34,7 +34,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     IdentityService identityService;
     ObjectMapper objectMapper;
     @NonFinal
-    String[] publicEndpoints = {"/auth/.*", "/users/register"};
+    String[] publicEndpoints = {"/.*/graphiql"};
+    @NonFinal
+    String[] publicEndpointsWithApiPrefix = {"/auth/.*", "/users/register"};
     @Value("${app.api-prefix}")
     @NonFinal
     String apiPrefix;
@@ -53,9 +55,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return unauthenticated(exchange.getResponse());
         }
 
-        String token = authHeader.getFirst().replace("Bearer ", "");
-
-        return identityService.introspect(token).flatMap(response -> {
+        return identityService.introspect(authHeader.getFirst()).flatMap(response -> {
             if (response.getResult().isValid()) {
                 return chain.filter(exchange);
             } else {
@@ -75,7 +75,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 .message("Unauthenticated")
                 .build();
 
-        String body = null;
+        String body;
         try {
             body = objectMapper.writeValueAsString(apiResponse);
         } catch (JsonProcessingException e) {
@@ -90,7 +90,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicEndpoint(ServerHttpRequest request) {
-        return Arrays.stream(publicEndpoints)
-                .anyMatch(s -> request.getURI().getPath().matches(apiPrefix + s));
+        ;
+        return Arrays.stream(publicEndpointsWithApiPrefix)
+                .anyMatch(s -> request.getURI().getPath().matches(apiPrefix + s))
+                || Arrays.stream(publicEndpoints)
+                .anyMatch(s -> request.getURI().getPath().matches(s));
     }
 }

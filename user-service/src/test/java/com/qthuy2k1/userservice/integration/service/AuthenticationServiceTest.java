@@ -79,7 +79,6 @@ public class AuthenticationServiceTest extends BaseServiceTest {
     @Test
     void introspect() throws ParseException, JOSEException {
         validAuthenticate();
-
         IntrospectResponse introspectResponse = authenticationService.introspect(token);
 
         assertThat(introspectResponse).isNotNull();

@@ -199,7 +199,6 @@ public class AuthenticationService implements IAuthenticationService {
         }
 
         log.info("cannot extract token");
-        log.info("authorizationHeader: {}", authorizationHeader);
         return null;
     }
 }

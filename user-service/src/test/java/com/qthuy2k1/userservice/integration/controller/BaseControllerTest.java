@@ -155,7 +155,8 @@ public abstract class BaseControllerTest {
                 }
         );
         assertThat(authResponse).isNotNull();
-
+        assertThat(authResponse.getResult().isAuthenticated()).isTrue();
+        assertThat(authResponse.getResult().getToken()).isNotNull();
         return authResponse.getResult().getToken();
     }
 

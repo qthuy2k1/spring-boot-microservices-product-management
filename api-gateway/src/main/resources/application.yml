@@ -13,6 +13,10 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      httpclient:
+        wiretap: true
+      httpserver:
+        wiretap: true
       routes:
         ## User Service
         - id: user-service
@@ -89,11 +93,9 @@ spring:
     web-application-type: reactive
 
 logging:
-  pattern:
-    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
   level:
-    root: INFO
-    #    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    reactor:
+      netty: INFO
     org.springframework.cloud.gateway: TRACE
 
 ## Zipkin

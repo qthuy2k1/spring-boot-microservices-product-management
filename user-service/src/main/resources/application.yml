@@ -38,6 +38,9 @@ spring:
     signerKey: "iYcJS25OwsLDyqgCWgDQ/s7w4QqpU9A15MWniRM5Y0bj73JO/hlXksVLr3fnJt/y"
     valid-duration: 3600 # in second
     refreshable-duration: 36000
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
 
 ## Eureka
 eureka:
@@ -50,8 +53,18 @@ eureka:
     prefer-ip-address: true
 
 
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: *
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enable: true
+    ratelimiters:
+      enable: true
