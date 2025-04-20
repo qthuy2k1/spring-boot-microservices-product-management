@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7fcb6b61-36cd-47a1-9e9a-3a5299db3b6b" name="Changes" comment="Split tests into unit and integration tests">
+      <change afterPath="$PROJECT_DIR$/inventory-service/src/main/java/com/inventoryservice/config/KafkaTopicConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inventory-service/src/main/java/com/inventoryservice/dto/ReduceInventoryRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/order-service/src/main/java/com/qthuy2k1/orderservice/dto/request/ReduceInventoryRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/dto/response/PaginatedResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/config/AuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/config/AuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/repository/IdentityClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/repository/IdentityClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/service/IdentityService.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/qthuy2k1/apigateway/service/IdentityService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inventory-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/com/inventoryservice/service/InventoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/com/inventoryservice/service/InventoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/order-service/src/main/java/com/qthuy2k1/orderservice/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/com/qthuy2k1/orderservice/controller/OrderController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/order-service/src/main/java/com/qthuy2k1/orderservice/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/com/qthuy2k1/orderservice/service/OrderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/controller/ProductController.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/controller/ProductController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/repository/feign/InventoryClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/service/IProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/service/IProductService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/com/qthuy2k1/productservice/service/ProductService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/controller/ProductControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/controller/ProductControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/BaseServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/BaseServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/ProductCategoryServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/ProductCategoryServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/ProductServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/integration/service/ProductServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/unit/controller/ProductControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/unit/controller/ProductControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/unit/service/ProductServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/test/java/com/qthuy2k1/productservice/unit/service/ProductServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/com/qthuy2k1/userservice/service/AuthenticationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/com/qthuy2k1/userservice/service/AuthenticationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice/integration/controller/BaseControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice/integration/controller/BaseControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice/integration/service/AuthenticationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice/integration/service/AuthenticationServiceTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="module" />
+    </option>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="package-info" />
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="OptimizeOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="showPreview" value="true" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2cH7syP1cQamleq6Mh7yGizdcYe" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.InventoryApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.NotificationApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.OrderApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.PaymentApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.ProductApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.UserApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Application.com.qthuy2k1.userservice.UserApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.local.yml.mongo-express: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.local.yml.mongodb: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.local.yml.postgres-inventory: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.local.yml: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.api-gateway: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.broker: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.eureka-server: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.kafka: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.mongo-express: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.mongo-payment: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.notification-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.notification: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.order-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.payment-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.postgres-inventory: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.postgres-order: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.postgres-product: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.postgres-user: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.product-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.product: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.redis: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.user-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.user: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.zipkin: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml.zookeeper: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in eureka-server.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in product-service (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in product-service (2).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in product-service (3).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service (2).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service (3).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service (4).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service (5).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.authentication_Unauthenticated.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.authentication_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.introspect.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.logout.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationControllerTest.refreshToken.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest,testConnection and 3 more.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.authenticate.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.authenticate_Unauthenticated.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.authenticate_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.introspect.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.logout.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationServiceTest.refreshToken.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.OrderControllerTest.createOrder.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.OrderControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.OrderServiceTest.createOrder.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.OrderServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionControllerTest.create.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionControllerTest.createPermission_PermissionExisted.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionControllerTest.executor&quot;: &quot;Coverage&quot;,
+    &quot;JUnit.PermissionControllerTest.getAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest,testProfileIsActive and 2 more.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest.create.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest.delete.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest.deletePermission.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PermissionTest.getAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryController.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryControllerTest.createProductCategory.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryControllerTest.getAllCategories.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryServiceTest.create.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryServiceTest.create_And_GetAll_ProductCategory.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryServiceTest.getAllProductCategories.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductCategoryServiceTest.getProductCategoryById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.createProduct.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.createProduct_ExceptionThrown_InvalidRequest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.deleteProductById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.deleteProductById_ExceptionThrown_ProductNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.getAllProducts.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.getProductById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.getUserById_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.updateProductById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.updateProductById_ExceptionThrown_InvalidRequest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductControllerTest.updateUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductGraphQLControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductGraphQLControllerTest.findAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.createProduct.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.create_and_getAll_Product.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.deleteProduct.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.deleteProductById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.deleteProductById_ExceptionThrown_ProductNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.getAllProducts.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.getProductById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.getProductById_ExceptionThrown_ProductNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.testConnection.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProductServiceTest.testDatabaseConnection.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.create.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.createRole_RoleExisted.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.create_And_GetAll_Roles.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.delete.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleControllerTest.getAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.create.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.create_And_GetAll_Roles.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.create_Permission_NotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.create_Role_Existed.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.create_Role_NotFound_Permission.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.delete.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.deleteRole.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RoleServiceTest.getAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerIntegrationTest.createUserTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.deleteUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.deleteUserById_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.existsById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.existsById_NotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getAllUsers.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getAllUsers_Unauthorized.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getMyInfo.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserByEmail.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserByEmail_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserById_ExceptionThrown_UNAUTHORIZED.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserById_ExceptionThrown_Unauthorized.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.getUserById_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.signup.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.signup_And_GetAll.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.signup_ExceptionThrown_InvalidRequest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.testContainersAreRunning.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.testKafkaStartup.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.updateUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.updateUserById_ExceptionThrown_InvalidRequest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTest.updateUserById_ExceptionThrown_Unauthorized.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserRepositoryTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserRepositoryTest.shouldExistsByEmail.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserRepositoryTest.shouldFindByEmail.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.createUser.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.createUser_WhenEmailIsTaken_ExceptionThrown.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.create_And_GetAll_User.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.create_And_GetAll_Users.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.deleteUser.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.deleteUserById_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.existsById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.existsById_NotExists.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getAllUsers.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getMyInfo.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getUserByEmail.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getUserByEmail_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.getUserById_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.testConnection.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.updateUserById.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.updateUserById_ExceptionThrown_EmailAlreadyIsTaken.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserServiceTest.updateUserById_ExceptionThrown_UserNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.com.qthuy2k1.productservice.service in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.com.qthuy2k1.userservice.service in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.controller in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.controller in user-service.executor&quot;: &quot;Coverage&quot;,
+    &quot;JUnit.java in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.productservice in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.service in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.service in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.unit in product-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.unit in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.userservice in user-service.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.api-gateway [validate].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.eureka-server [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.eureka-server [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.inventory-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification [com.google.cloud.tools:jib-maven-plugin:3.4.0:dockerBuild].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification-service [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification-service [org.apache.maven.plugins:maven-clean-plugin:3.2.0:clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification-service [org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.notification-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order [test].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order-service [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.order-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.payment-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product-service [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product-service [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.product-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [com.google.cloud.tools:jib-maven-plugin:3.4.0:build].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [com.google.cloud.tools:jib-maven-plugin:3.4.0:dockerBuild].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [spring-boot:run].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement [validate].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.productmanagement.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user [com.google.cloud.tools:jib-maven-plugin:3.4.0:dockerBuild].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [com.google.cloud.tools:jib-maven-plugin:3.4.0:dockerBuild].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [org.apache.maven.plugins:maven-clean-plugin:3.2.0:clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-service [site].executor&quot;: &quot;Run&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-ideavim&quot;: &quot;ideavim&quot;,
+    &quot;Notification.DoNotAsk-ideavim&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;21&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_directory_selection&quot;: &quot;D:/Code/Java/spring-boot-microservices-product-management/user-service/src/main/java/com/qthuy2k1&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Code/Java/spring-boot-microservices-product-management&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
+    &quot;settings.editor.splitter.proportion&quot;: &quot;0.26104417&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.qthuy2k1.userservice.config" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\k8s\infrastuctures" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\payment-service\src\main\resources" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\inventory-service\src\main\resources" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\k8s\services" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\order-service\src\main\java\com\qthuy2k1\orderservice\config" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\product-service\src\main\resources\graphql" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\notification\src\main\resources" />
+      <recent name="D:\Code\Java\spring-boot-microservices-product-management\user\src\main\resources" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.qthuy2k1.userservice.service" />
+      <recent name="com.qthuy2k1.userservice.repository" />
+      <recent name="" />
+      <recent name="com.qthuy2k1.user" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.qthuy2k1.orderservice.dto.request" />
+      <recent name="com.inventoryservice.dto" />
+      <recent name="com.qthuy2k1.productservice.integration.controller" />
+      <recent name="com.qthuy2k1.userservice.controller" />
+      <recent name="com.qthuy2k1.userservice.unit.service" />
+    </key>
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn package" />
+      <command value="mvn spring-boot:run" />
+    </option>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="CompoundRunConfigurationType" />
+        <option value="MavenRunConfiguration" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="JUnit.All in user-service">
+    <configuration name="ApiGatewayApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.apigateway.ApiGatewayApplication" />
+      <module name="api-gateway" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.apigateway.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EurekaServerApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.eurekaserver.EurekaServerApplication" />
+      <module name="eureka-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.eurekaserver.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="InventoryApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.inventoryservice.InventoryApplication" />
+      <module name="inventory-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.inventoryservice.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="NotificationApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.notificationservice.NotificationApplication" />
+      <module name="notification-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.notificationservice.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="OrderApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.orderservice.OrderApplication" />
+      <module name="order-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.orderservice.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ProductApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.productservice.ProductApplication" />
+      <module name="product-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.productservice.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserApplication" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.userservice.UserApplication" />
+      <module name="user-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.userservice.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in user-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="user-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthenticationControllerTest.introspect" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="user-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.userservice.integration.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.qthuy2k1.userservice.integration.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.userservice.integration.controller.AuthenticationControllerTest" />
+      <option name="METHOD_NAME" value="introspect" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthenticationControllerTest.logout" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="user-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.userservice.integration.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.qthuy2k1.userservice.integration.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.userservice.integration.controller.AuthenticationControllerTest" />
+      <option name="METHOD_NAME" value="logout" />
+      <option name="TEST_OBJECT" value="method" />
+      <dir value="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthenticationServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="user-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.qthuy2k1.userservice.integration.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.qthuy2k1.userservice.integration.service" />
+      <option name="MAIN_CLASS_NAME" value="com.qthuy2k1.userservice.integration.service.AuthenticationServiceTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="userservice in user-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="user-service" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/user-service/src/test/java/com/qthuy2k1/userservice" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="product-service" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="product-service" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="productmanagement" type="MavenRunConfiguration" factoryName="Maven" nameIsGenerated="true">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="cmdOptions" />
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list />
+            </option>
+            <option name="multimoduleDir" />
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="projectsCmdOptionValues">
+              <list />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Application.ApiGatewayApplication" />
+      <item itemvalue="Application.EurekaServerApplication" />
+      <item itemvalue="Application.InventoryApplication" />
+      <item itemvalue="Application.NotificationApplication" />
+      <item itemvalue="Application.OrderApplication" />
+      <item itemvalue="Application.ProductApplication" />
+      <item itemvalue="Application.UserApplication" />
+      <item itemvalue="JUnit.AuthenticationControllerTest.introspect" />
+      <item itemvalue="JUnit.AuthenticationControllerTest.logout" />
+      <item itemvalue="JUnit.AuthenticationServiceTest" />
+      <item itemvalue="JUnit.userservice in user-service" />
+      <item itemvalue="JUnit.All in user-service" />
+      <item itemvalue="Maven.productmanagement" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.All in user-service" />
+        <item itemvalue="JUnit.userservice in user-service" />
+        <item itemvalue="JUnit.AuthenticationServiceTest" />
+        <item itemvalue="JUnit.AuthenticationControllerTest.introspect" />
+        <item itemvalue="JUnit.AuthenticationControllerTest.logout" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7fcb6b61-36cd-47a1-9e9a-3a5299db3b6b" name="Changes" comment="" />
+      <created>1707756862695</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1707756862695</updated>
+    </task>
+    <task id="LOCAL-00001" summary="add order report feature">
+      <option name="closed" value="true" />
+      <created>1742740280455</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1742740280455</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add interfaces to service layers">
+      <option name="closed" value="true" />
+      <created>1742740727173</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1742740727173</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Change unit test in service layer from mockito to testcontainers">
+      <option name="closed" value="true" />
+      <created>1742740792509</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1742740792509</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Update README.md">
+      <option name="closed" value="true" />
+      <created>1745050572110</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1745050572110</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Remove version from docker compose file">
+      <option name="closed" value="true" />
+      <created>1745050591709</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1745050591709</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Split tests into unit and integration tests">
+      <option name="closed" value="true" />
+      <created>1745050755192</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1745050755192</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
+    <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Dockerize the application" />
+    <MESSAGE value="add order report feature" />
+    <MESSAGE value="Add interfaces to service layers" />
+    <MESSAGE value="Change unit test in service layer from mockito to testcontainers" />
+    <MESSAGE value="Update README.md" />
+    <MESSAGE value="Remove version from docker compose file" />
+    <MESSAGE value="Split tests into unit and integration tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Split tests into unit and integration tests" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.springframework.beans.factory.BeanCreationException" package="org.springframework.beans.factory" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.springframework.security.oauth2.jwt.JwtException" package="org.springframework.security.oauth2.jwt" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.IllegalArgumentException" package="java.lang" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="org.springframework.beans.factory.support.DefaultListableBeanFactory$DependencyObjectProvider" memberName="descriptor" />
+      </pinned-members>
+    </pin-to-top-manager>
+    <watches-manager>
+      <configuration name="JUnit">
+        <watch expression="capturedUser" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$userservice_in_user_service.ic" NAME="userservice in user-service Coverage Results" MODIFIED="1722698529597" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$PermissionTest.ic" NAME="PermissionTest Coverage Results" MODIFIED="1722613703515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.service.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$UserServiceTest_getMyInfo.ic" NAME="UserServiceTest.getMyInfo Coverage Results" MODIFIED="1722610835098" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.service.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$UserServiceTest_getUserByEmail_UserNotFound.ic" NAME="UserServiceTest.getUserByEmail_UserNotFound Coverage Results" MODIFIED="1722611448829" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.service.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$ProductControllerTest.ic" NAME="ProductControllerTest Coverage Results" MODIFIED="1713091702581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>com.qthuy2k1.productservice.controller.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$UserControllerTest.ic" NAME="UserControllerTest Coverage Results" MODIFIED="1722685954469" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.controller.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$PermissionControllerTest.ic" NAME="PermissionControllerTest Coverage Results" MODIFIED="1722698499333" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.controller.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$ProductServiceTest.ic" NAME="ProductServiceTest Coverage Results" MODIFIED="1722699552533" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.productservice.service.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$UserServiceTest.ic" NAME="UserServiceTest Coverage Results" MODIFIED="1722611538538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.service.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$service_in_user_service.ic" NAME="service in user-service Coverage Results" MODIFIED="1722613720722" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$RoleControllerTest.ic" NAME="RoleControllerTest Coverage Results" MODIFIED="1722697830374" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.qthuy2k1.userservice.controller.*</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/spring_boot_microservices_product_management$controller_in_user_service.ic" NAME="controller in user-service Coverage Results" MODIFIED="1713021186733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+  </component>
+</project>

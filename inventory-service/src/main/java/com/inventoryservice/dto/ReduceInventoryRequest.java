@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class InventoryRequest {
-    @Min(value = 1, message = "the product id should be greater than 0")
+public class ReduceInventoryRequest {
+    @Min(value = 1, message = "the 'product id' should be greater than 0")
     private Integer productId;
-    @Min(value = 0, message = "the quantity should be greater than or equal to 0")
-    private Integer quantity;
+    @Min(value = 0, message = "the 'reduce by' should be greater than or equal to 0")
+    private Integer reduceBy;
 }

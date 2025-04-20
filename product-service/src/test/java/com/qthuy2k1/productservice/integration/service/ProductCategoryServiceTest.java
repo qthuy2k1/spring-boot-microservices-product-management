@@ -2,46 +2,25 @@ package com.qthuy2k1.productservice.integration.service;
 
 import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
 import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
-import com.qthuy2k1.productservice.mapper.ProductCategoryMapper;
-import com.qthuy2k1.productservice.model.ProductCategoryModel;
-import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
 import com.qthuy2k1.productservice.service.ProductCategoryService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-@SpringBootTest
-@Testcontainers
+@SpringBootTest(properties = "spring.profiles.active=test")
+@DirtiesContext
 public class ProductCategoryServiceTest extends BaseServiceTest {
-    private final ProductCategoryMapper productCategoryMapper = Mappers.getMapper(ProductCategoryMapper.class);
-    @Autowired
-    private ProductCategoryRepository productCategoryRepository;
     @Autowired
     private ProductCategoryService productCategoryService;
-    private ProductCategoryModel productCategorySaved;
-
-    @BeforeEach
-    void setup() {
-        productCategoryRepository.deleteAll();
-        productCategorySaved = productCategoryRepository.save(ProductCategoryModel.builder()
-                .name("Category 999")
-                .description("Description of Category 999")
-                .products(Set.of())
-                .build());
-    }
 
     @Test
     void create_And_GetAll_ProductCategory() {
-        // given
         ProductCategoryRequest productCategoryRequest1 = ProductCategoryRequest.builder()
                 .name("Product Category 1")
                 .description("Product category description 1")
@@ -63,6 +42,16 @@ public class ProductCategoryServiceTest extends BaseServiceTest {
         assertThat(productCategoryResp1.getDescription()).isEqualTo(productCategoryCreate1.getDescription());
         assertThat(productCategoryResp2.getName()).isEqualTo(productCategoryCreate2.getName());
         assertThat(productCategoryResp2.getDescription()).isEqualTo(productCategoryCreate2.getDescription());
+    }
+
+    @Test
+    void getAllProductCateogories() {
+        List<ProductCategoryResponse> productCategories = productCategoryService.getAllProductCategories();
+        // Get the inserted product category which is at index 0
+        ProductCategoryResponse productCategoryResp = productCategories.getFirst();
+        assertThat(productCategories.size()).isEqualTo(1);
+        assertThat(productCategoryResp.getName()).isEqualTo(productCategorySaved.getName());
+        assertThat(productCategoryResp.getDescription()).isEqualTo(productCategorySaved.getDescription());
     }
 
     @Test

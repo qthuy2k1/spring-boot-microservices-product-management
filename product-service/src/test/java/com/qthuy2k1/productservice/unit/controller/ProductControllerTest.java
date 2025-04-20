@@ -4,10 +4,7 @@ package com.qthuy2k1.productservice.unit.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qthuy2k1.productservice.controller.ProductController;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
-import com.qthuy2k1.productservice.dto.response.ApiResponse;
-import com.qthuy2k1.productservice.dto.response.MessageResponse;
-import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
-import com.qthuy2k1.productservice.dto.response.ProductResponse;
+import com.qthuy2k1.productservice.dto.response.*;
 import com.qthuy2k1.productservice.enums.ErrorCode;
 import com.qthuy2k1.productservice.exception.AppException;
 import com.qthuy2k1.productservice.service.IProductService;
@@ -45,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @WithMockUser(username = "usertest", password = "password", roles = "ADMIN")
 public class ProductControllerTest {
+    int defaultPage = 0;
+    int defaultSize = 10;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -160,12 +159,21 @@ public class ProductControllerTest {
                         .category(productCategoryResponse)
                         .build()
         );
-        given(productService.getAllProducts()).willReturn(products);
+        PaginatedResponse.Pagination pagination = new PaginatedResponse.Pagination();
+        pagination.setTotalRecords(2);
+        pagination.setCurrentPage(0);
+        pagination.setTotalPages(1);
+
+        // Set next and previous page numbers
+        pagination.setNextPage(null);
+        pagination.setPrevPage(null);
+        PaginatedResponse<ProductResponse> productsPaginated = new PaginatedResponse<>(products, pagination);
+        given(productService.getAllProducts(defaultPage, defaultSize)).willReturn(productsPaginated);
 
 
         // when
-        ApiResponse<List<ProductResponse>> apiResponse = ApiResponse.<List<ProductResponse>>builder()
-                .result(products)
+        ApiResponse<PaginatedResponse<ProductResponse>> apiResponse = ApiResponse.<PaginatedResponse<ProductResponse>>builder()
+                .result(productsPaginated)
                 .build();
         mockMvc.perform(get("/products"))
                 .andExpect(status().isOk())
@@ -174,7 +182,7 @@ public class ProductControllerTest {
                 .andReturn();
 
         // then
-        then(productService).should().getAllProducts();
+        then(productService).should().getAllProducts(defaultPage, defaultSize);
     }
 
     @Test

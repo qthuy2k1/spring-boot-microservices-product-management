@@ -31,6 +31,12 @@ spring:
     redis:
       cache-null-values: false
       time-to-live: 600000
+  kafka:
+    bootstrap-servers:
+      - localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 ## Eureka
 eureka:
@@ -73,3 +79,7 @@ resilience4j:
   retry.instances.user.wait-duration: 5
 
 
+logging:
+  level:
+    org.springframework.transaction: DEBUG
+    org.hibernate: DEBUG

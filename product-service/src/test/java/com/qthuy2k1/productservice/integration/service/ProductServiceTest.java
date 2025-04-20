@@ -1,68 +1,25 @@
 package com.qthuy2k1.productservice.integration.service;
 
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
+import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
-import com.qthuy2k1.productservice.model.ProductCategoryModel;
-import com.qthuy2k1.productservice.model.ProductModel;
-import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
-import com.qthuy2k1.productservice.repository.ProductRepository;
-import com.qthuy2k1.productservice.repository.feign.InventoryClient;
-import com.qthuy2k1.productservice.service.ProductService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.profiles.active=test")
+@DirtiesContext
 public class ProductServiceTest extends BaseServiceTest {
     private final DecimalFormat decimalFormatPrice = new DecimalFormat("#.00");
-    private ProductModel productSaved;
-    private Integer productCategorySavedId;
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private ProductCategoryRepository productCategoryRepository;
-    @MockBean
-    private InventoryClient inventoryClient;
-    @Autowired
-    private ProductService productService;
-
-    @BeforeEach
-    void setUp() {
-        productRepository.deleteAll();
-
-        ProductCategoryModel productCategoryModel = productCategoryRepository.save(ProductCategoryModel.builder()
-                .name("Category 1")
-                .description("Description of Category 1")
-                .products(Set.of())
-                .build());
-        productSaved = productRepository.save(ProductModel.builder()
-                .name("Product 999")
-                .description("Product description 999")
-                .price(BigDecimal.valueOf(1))
-                .category(productCategoryModel)
-                .skuCode("abc")
-                .build());
-
-        productCategorySavedId = productCategoryModel.getId();
-    }
-
-    @Test
-    public void testConnection() {
-        assertThat(postgres.isRunning()).isTrue();
-        assertThat(REDIS_CONTAINER.isRunning()).isTrue();
-    }
-
+    int defaultPage = 0;
+    int defaultSize = 10;
 
     @Test
     void create_And_GetAll_Product() {
@@ -71,7 +28,7 @@ public class ProductServiceTest extends BaseServiceTest {
                 .name("Product 1")
                 .description("Product description 1")
                 .price(BigDecimal.valueOf(1))
-                .categoryId(productCategorySavedId)
+                .categoryId(productCategorySaved.getId())
                 .skuCode("abc")
                 .quantity(1)
                 .build();
@@ -79,31 +36,47 @@ public class ProductServiceTest extends BaseServiceTest {
                 .name("Product 2")
                 .description("Product description 2")
                 .price(BigDecimal.valueOf(1))
-                .categoryId(productCategorySavedId)
+                .categoryId(productCategorySaved.getId())
                 .skuCode("abc")
                 .quantity(1)
                 .build();
 
-        ProductResponse productCreate1 = productService.createProduct(productRequest1);
-        ProductResponse productCreate2 = productService.createProduct(productRequest2);
+        ProductResponse productCreated1 = productService.createProduct(productRequest1);
+        ProductResponse productCreated2 = productService.createProduct(productRequest2);
 
-        List<ProductResponse> products = productService.getAllProducts();
+        PaginatedResponse<ProductResponse> products = productService.getAllProducts(defaultPage, defaultSize);
         // Get the newly inserted product which is at index 1
-        ProductResponse productResp1 = products.get(1);
-        ProductResponse productResp2 = products.get(2);
+        ProductResponse productResp1 = products.getData().get(1);
+        ProductResponse productResp2 = products.getData().get(2);
 
         // The product list size should be 3 (1 existing product plus 2 newly inserted products)
-        assertThat(products.size()).isEqualTo(3);
-        assertThat(productResp1.getName()).isEqualTo(productCreate1.getName());
-        assertThat(productResp1.getDescription()).isEqualTo(productCreate1.getDescription());
-        assertThat(productResp1.getPrice()).isEqualTo(decimalFormatPrice.format(productCreate1.getPrice()));
-        assertThat(productResp1.getCategory().getId()).isEqualTo(productCreate1.getCategory().getId());
-        assertThat(productResp1.getSkuCode()).isEqualTo(productCreate1.getSkuCode());
-        assertThat(productResp2.getName()).isEqualTo(productCreate2.getName());
-        assertThat(productResp2.getDescription()).isEqualTo(productCreate2.getDescription());
-        assertThat(productResp2.getPrice()).isEqualTo(decimalFormatPrice.format(productCreate2.getPrice()));
-        assertThat(productResp2.getCategory().getId()).isEqualTo(productCreate2.getCategory().getId());
-        assertThat(productResp2.getSkuCode()).isEqualTo(productCreate2.getSkuCode());
+        assertThat(products.getPagination().getTotalRecords()).isEqualTo(3);
+        assertThat(productResp1.getName()).isEqualTo(productCreated1.getName());
+        assertThat(productResp1.getDescription()).isEqualTo(productCreated1.getDescription());
+        assertThat(productResp1.getPrice()).isEqualTo(decimalFormatPrice.format(productCreated1.getPrice()));
+        assertThat(productResp1.getCategory().getId()).isEqualTo(productCreated1.getCategory().getId());
+        assertThat(productResp1.getSkuCode()).isEqualTo(productCreated1.getSkuCode());
+
+        assertThat(productResp2.getName()).isEqualTo(productCreated2.getName());
+        assertThat(productResp2.getDescription()).isEqualTo(productCreated2.getDescription());
+        assertThat(productResp2.getPrice()).isEqualTo(decimalFormatPrice.format(productCreated2.getPrice()));
+        assertThat(productResp2.getCategory().getId()).isEqualTo(productCreated2.getCategory().getId());
+        assertThat(productResp2.getSkuCode()).isEqualTo(productCreated2.getSkuCode());
+    }
+
+    @Test
+    void getAllProducts() {
+        PaginatedResponse<ProductResponse> products = productService.getAllProducts(defaultPage, defaultSize);
+        // Get the inserted product which is at index 0
+        ProductResponse productResp1 = products.getData().getFirst();
+
+        // The product list size should be 1 (1 existing product)
+        assertThat(products.getPagination().getTotalRecords()).isEqualTo(1);
+        assertThat(productResp1.getName()).isEqualTo(productSaved.getName());
+        assertThat(productResp1.getDescription()).isEqualTo(productSaved.getDescription());
+        assertThat(productResp1.getPrice()).isEqualTo(decimalFormatPrice.format(productSaved.getPrice()));
+        assertThat(productResp1.getCategory().getId()).isEqualTo(productSaved.getCategory().getId());
+        assertThat(productResp1.getSkuCode()).isEqualTo(productSaved.getSkuCode());
     }
 
     @Test
@@ -111,9 +84,9 @@ public class ProductServiceTest extends BaseServiceTest {
         // delete the existing product in db
         productService.deleteProductById(productSaved.getId());
 
-        List<ProductResponse> products = productService.getAllProducts();
+        PaginatedResponse<ProductResponse> products = productService.getAllProducts(defaultPage, defaultSize);
         // The product list size should be 0
-        assertThat(products.size()).isEqualTo(0);
+        assertThat(products.getPagination().getTotalRecords()).isEqualTo(0);
     }
 
     @Test

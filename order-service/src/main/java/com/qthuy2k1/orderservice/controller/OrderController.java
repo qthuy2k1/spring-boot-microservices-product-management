@@ -39,8 +39,11 @@ public class OrderController {
         return new ResponseEntity<>("Success", HttpStatus.OK);
     }
 
-    @GetMapping()
-    public ResponseEntity<ApiResponse<ReportResponse>> getReport(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+    @GetMapping("/report")
+    public ResponseEntity<ApiResponse<ReportResponse>> getReport(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate
+    ) {
         return ResponseEntity.ok().body(
                 ApiResponse.<ReportResponse>builder()
                         .result(orderService.getReport(startDate, endDate))

@@ -2,6 +2,7 @@ package com.qthuy2k1.orderservice.service;
 
 import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
 import com.qthuy2k1.orderservice.dto.request.OrderRequest;
+import com.qthuy2k1.orderservice.dto.request.ReduceInventoryRequest;
 import com.qthuy2k1.orderservice.dto.response.*;
 import com.qthuy2k1.orderservice.enums.ErrorCode;
 import com.qthuy2k1.orderservice.event.OrderItemPlaced;
@@ -51,7 +52,8 @@ public class OrderService implements IOrderService {
     OrderRepository orderRepository;
     OrderItemRepository orderItemRepository;
     OrderReportRepository orderReportRepository;
-    KafkaTemplate<String, OrderPlaced> kafkaTemplate;
+    KafkaTemplate<String, OrderPlaced> orderPlacedKafkaTemplate;
+    KafkaTemplate<String, List<ReduceInventoryRequest>> reduceInventoryKafkaTemplate;
     @LoadBalanced
     WebClient.Builder webClientBuilder;
     UserClient userClient;
@@ -112,6 +114,8 @@ public class OrderService implements IOrderService {
                     UserResponse user = userFuture.join();
 
                     Set<OrderItemModel> orderItemModels = new HashSet<>();
+                    // for reducing product stocks in inventory service
+                    List<ReduceInventoryRequest> reduceInventoryRequests = new ArrayList<>();
 
                     orderItemsRequest.forEach(orderItem -> {
                         ProductResponse product = products.get(orderItem.getProductId());
@@ -121,7 +125,12 @@ public class OrderService implements IOrderService {
                                 .quantity(orderItem.getQuantity())
                                 .build()
                         );
+                        reduceInventoryRequests.add(ReduceInventoryRequest.builder()
+                                .productId(product.getId())
+                                .reduceBy(orderItem.getQuantity())
+                                .build());
                     });
+
                     orderRequest.getOrderItem().forEach(orderItem -> {
                         // for requesting to inventory service to check whether product is in stock or not
                         InventoryResponse inventoryResponses = inventoryClient.isInStock(orderItem.getQuantity(), orderItem.getProductId());
@@ -132,7 +141,6 @@ public class OrderService implements IOrderService {
                         if (!inventoryResponses.isInStock()) {
                             throw new AppException(ErrorCode.PRODUCT_OUT_OF_STOCK);
                         }
-
                     });
 
                     OrderModel orderModel = orderMapper.toOder(orderRequest);
@@ -173,10 +181,11 @@ public class OrderService implements IOrderService {
                             .orderItems(orderItemPlaceds)
                             .build();
 
-                    // produce message to create-order topic
-                    kafkaTemplate.send("create-order", orderPlaced);
+                    // produce a message to create-order topic
+                    orderPlacedKafkaTemplate.send("create-order", orderPlaced);
 
-//                    orderSaved.setOrderItems(orderItemModelsSaved);
+                    // produce a message to reduce-product-stock
+                    reduceInventoryKafkaTemplate.send("reduce-product-stock", reduceInventoryRequests);
 
                     return orderMapper.toOrderResponse(orderSaved);
                 }).get();

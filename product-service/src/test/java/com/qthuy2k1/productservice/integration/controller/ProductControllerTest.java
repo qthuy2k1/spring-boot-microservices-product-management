@@ -3,19 +3,21 @@ package com.qthuy2k1.productservice.integration.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qthuy2k1.productservice.ProductApplication;
+import com.qthuy2k1.productservice.dto.request.InventoryRequest;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.MessageResponse;
+import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
 import com.qthuy2k1.productservice.mapper.ProductCategoryMapper;
-import com.qthuy2k1.productservice.repository.feign.InventoryClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -44,7 +46,9 @@ public class ProductControllerTest extends BaseControllerTest {
     private final ProductCategoryMapper productCategoryMapper = Mappers.getMapper(ProductCategoryMapper.class);
     private final DecimalFormat decimalFormatPrice = new DecimalFormat("#.00");
     @MockBean
-    private InventoryClient inventoryClient;
+    KafkaTemplate<String, InventoryRequest> inventoryRequestKafkaTemplate;
+    @MockBean
+    KafkaTemplate<String, List<InventoryRequest>> inventoryRequestListKafkaTemplate;
 
     @Test
     void createProduct() throws Exception {
@@ -96,15 +100,15 @@ public class ProductControllerTest extends BaseControllerTest {
                 .andReturn();
 
 
-        ApiResponse<List<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
+        ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
                 getAllProductsResult.getResponse().getContentAsByteArray(),
-                new TypeReference<ApiResponse<List<ProductResponse>>>() {
+                new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
                 }
         );
 
         assertThat(getAllProductsApiResponse).isNotNull();
-        assertThat(getAllProductsApiResponse.getResult().size()).isEqualTo(3);
-        ProductResponse productCreated = getAllProductsApiResponse.getResult().getLast();
+        assertThat(getAllProductsApiResponse.getResult().getPagination().getTotalRecords()).isEqualTo(3);
+        ProductResponse productCreated = getAllProductsApiResponse.getResult().getData().getLast();
         assertThat(productCreated.getName()).isEqualTo(expectedProductResponse.getName());
         assertThat(productCreated.getDescription()).isEqualTo(expectedProductResponse.getDescription());
         assertThat(productCreated.getPrice()).isEqualTo(decimalFormatPrice.format(expectedProductResponse.getPrice()));
@@ -147,15 +151,17 @@ public class ProductControllerTest extends BaseControllerTest {
                 .andReturn();
 
 
-        ApiResponse<List<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
+        ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
                 getAllProductsResult.getResponse().getContentAsByteArray(),
-                new TypeReference<ApiResponse<List<ProductResponse>>>() {
+                new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
                 }
         );
 
         assertThat(getAllProductsApiResponse).isNotNull();
-        assertThat(getAllProductsApiResponse.getResult().size()).isEqualTo(2);
-        ProductResponse productCreated1 = getAllProductsApiResponse.getResult().getFirst();
+        assertThat(getAllProductsApiResponse.getResult().getPagination().getTotalRecords()).isEqualTo(2);
+
+        ProductResponse productCreated1 = getAllProductsApiResponse.getResult().getData().getFirst();
+        assertThat(productCreated1.getId()).isEqualTo(productSaved1.getId());
         assertThat(productCreated1.getName()).isEqualTo(productSaved1.getName());
         assertThat(productCreated1.getDescription()).isEqualTo(productSaved1.getDescription());
         assertThat(productCreated1.getPrice()).isEqualTo(decimalFormatPrice.format(productSaved1.getPrice()));
@@ -163,7 +169,9 @@ public class ProductControllerTest extends BaseControllerTest {
         assertThat(productCreated1.getUrl()).isEqualTo(productSaved1.getUrl());
         assertThat(productCreated1.getThumbnail()).isEqualTo(productSaved1.getThumbnail());
         assertThat(productCreated1.getCategory()).isEqualTo(productCategoryMapper.toProductCategoryResponse(productSaved1.getCategory()));
-        ProductResponse productCreated2 = getAllProductsApiResponse.getResult().getLast();
+
+        ProductResponse productCreated2 = getAllProductsApiResponse.getResult().getData().getLast();
+        assertThat(productCreated2.getId()).isEqualTo(productSaved2.getId());
         assertThat(productCreated2.getName()).isEqualTo(productSaved2.getName());
         assertThat(productCreated2.getDescription()).isEqualTo(productSaved2.getDescription());
         assertThat(productCreated2.getPrice()).isEqualTo(decimalFormatPrice.format(productSaved2.getPrice()));
@@ -186,6 +194,32 @@ public class ProductControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
                 .andDo(print());
+
+        MvcResult getAllProductsResult = mockMvc.perform(get("/products")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+
+        ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
+                getAllProductsResult.getResponse().getContentAsByteArray(),
+                new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
+                }
+        );
+
+        assertThat(getAllProductsApiResponse).isNotNull();
+        assertThat(getAllProductsApiResponse.getResult().getPagination().getTotalRecords()).isEqualTo(1);
+
+        ProductResponse productCreated = getAllProductsApiResponse.getResult().getData().getFirst();
+        assertThat(productCreated.getId()).isEqualTo(productSaved2.getId());
+        assertThat(productCreated.getName()).isEqualTo(productSaved2.getName());
+        assertThat(productCreated.getDescription()).isEqualTo(productSaved2.getDescription());
+        assertThat(productCreated.getPrice()).isEqualTo(decimalFormatPrice.format(productSaved2.getPrice()));
+        assertThat(productCreated.getSkuCode()).isEqualTo(productSaved2.getSkuCode());
+        assertThat(productCreated.getUrl()).isEqualTo(productSaved2.getUrl());
+        assertThat(productCreated.getThumbnail()).isEqualTo(productSaved2.getThumbnail());
+        assertThat(productCreated.getCategory()).isEqualTo(productCategoryMapper.toProductCategoryResponse(productSaved2.getCategory()));
     }
 
     @Test

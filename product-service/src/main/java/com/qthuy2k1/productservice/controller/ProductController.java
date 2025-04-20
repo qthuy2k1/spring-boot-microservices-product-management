@@ -1,11 +1,9 @@
 package com.qthuy2k1.productservice.controller;
 
-import com.opencsv.CSVReader;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.MessageResponse;
+import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.service.IProductService;
 import jakarta.validation.Valid;
@@ -17,9 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,11 +37,15 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProducts() {
-        List<ProductResponse> products = productService.getAllProducts();
+    public ResponseEntity<ApiResponse<PaginatedResponse<ProductResponse>>> getAllProducts(
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "10", name = "size") int size
+    ) {
+        log.info("PAGE: {}", page);
+        log.info("SIZE: {}", size);
         return ResponseEntity.ok().body(
-                ApiResponse.<List<ProductResponse>>builder()
-                        .result(products)
+                ApiResponse.<PaginatedResponse<ProductResponse>>builder()
+                        .result(productService.getAllProducts(page, size))
                         .build()
         );
     }
@@ -103,14 +103,7 @@ public class ProductController {
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadProductList(@RequestParam("file") MultipartFile file) throws IOException {
-        CSVReader csvReader = new CSVReader(
-                new InputStreamReader(
-                        new ByteArrayInputStream(file.getBytes())));
-
-        CsvToBean<ProductRequest> csvToBean = new CsvToBeanBuilder(csvReader).withType(ProductRequest.class).build();
-        List<ProductRequest> productRequests = csvToBean.parse();
-
-        productService.batchInsertProduct(productRequests);
+        productService.batchInsertProduct(file);
         return ResponseEntity.ok().body(
                 ApiResponse.<String>builder()
                         .result(MessageResponse.SUCCESS)

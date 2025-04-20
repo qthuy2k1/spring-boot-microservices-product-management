@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.unit.service;
 
+import com.qthuy2k1.productservice.dto.request.InventoryRequest;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
@@ -8,18 +9,23 @@ import com.qthuy2k1.productservice.model.ProductCategoryModel;
 import com.qthuy2k1.productservice.model.ProductModel;
 import com.qthuy2k1.productservice.repository.ProductCategoryRepository;
 import com.qthuy2k1.productservice.repository.ProductRepository;
-import com.qthuy2k1.productservice.repository.feign.InventoryClient;
 import com.qthuy2k1.productservice.service.ProductService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,21 +36,20 @@ import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
+    @Spy
     private final ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
+    int defaultPage = 0;
+    int defaultSize = 10;
     @Mock
     private ProductRepository productRepository;
     @Mock
     private ProductCategoryRepository productCategoryRepository;
-    @Mock
-    private InventoryClient inventoryClient;
     @InjectMocks
     private ProductService productService;
-
-    @BeforeEach
-    void setUp() {
-        productService = new ProductService(productRepository, productCategoryRepository, inventoryClient, productMapper);
-    }
-
+    @Mock
+    private KafkaTemplate<String, InventoryRequest> inventoryRequestKafkaTemplate;
+    @Mock
+    private KafkaTemplate<String, List<InventoryRequest>> inventoryRequestListKafkaTemplate;
 
     @Test
     void createProduct() {
@@ -83,11 +88,37 @@ public class ProductServiceTest {
 
     @Test
     void getAllProducts() {
+        // Given
+        List<ProductModel> products = new ArrayList<>();
+        ProductCategoryModel productCategoryModel = ProductCategoryModel.builder()
+                .name("category 1")
+                .description("description of category 1")
+                .build();
+
+        products.add(
+                ProductModel.builder()
+                        .name("iphone 13")
+                        .description("description of iphone 13")
+                        .price(BigDecimal.valueOf(1000))
+                        .category(productCategoryModel)
+                        .build()
+        );
+        products.add(
+                ProductModel.builder()
+                        .name("iphone 12")
+                        .description("description of iphone 12")
+                        .price(BigDecimal.valueOf(900))
+                        .category(productCategoryModel)
+                        .build()
+        );
+        Page<ProductModel> productPage = new PageImpl<>(products);
+        given(productRepository.findAll(any(PageRequest.class))).willReturn(productPage);
+
         // When
-        productService.getAllProducts();
+        productService.getAllProducts(defaultPage, defaultSize);
 
         // Then
-        then(productRepository).should().findAll();
+        then(productRepository).should().findAll(any(PageRequest.class));
     }
 
     @Test
