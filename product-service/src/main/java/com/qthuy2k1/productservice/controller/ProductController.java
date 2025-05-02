@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -88,11 +86,7 @@ public class ProductController {
 
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductsByListId(@RequestParam("ids") String ids) {
-        List<ProductResponse> products = productService.getProductByListId(
-                Arrays.stream(ids.split(","))
-                        .map(Integer::parseInt)
-                        .collect(Collectors.toSet())
-        );
+        List<ProductResponse> products = productService.getProductByListId(ids);
         return ResponseEntity.ok().body(
                 ApiResponse.<List<ProductResponse>>builder()
                         .result(products)

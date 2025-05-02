@@ -30,13 +30,13 @@ public abstract class BaseServiceTest {
     protected static final int REDIS_PORT = 6379;
     @Container
     protected static final RedisContainer redisContainer =
-            new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine")).withExposedPorts(REDIS_PORT);
+            new RedisContainer(DockerImageName.parse("redis:6.2-alpine")).withExposedPorts(REDIS_PORT);
     @Container
     protected static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
             "postgres:16-alpine"
     );
     @Container
-    protected static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.1"));
+    protected static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
     ProductModel productSaved;
     @Autowired
     ProductRepository productRepository;

@@ -27,7 +27,7 @@ public interface IProductService {
 
     ProductGraphQLResponse getProductGraphQLById(int id);
 
-    List<ProductResponse> getProductByListId(Set<Integer> ids);
+    List<ProductResponse> getProductByListId(String ids);
 
     List<ProductGraphQLResponse> getProductGraphQLByListId(Set<Integer> ids);
 

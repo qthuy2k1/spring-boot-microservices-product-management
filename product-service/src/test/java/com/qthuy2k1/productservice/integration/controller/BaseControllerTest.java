@@ -31,7 +31,7 @@ public abstract class BaseControllerTest {
     static final int REDIS_PORT = 6379;
     @Container
     static final RedisContainer redisContainer =
-            new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine"))
+            new RedisContainer(DockerImageName.parse("redis:6.2-alpine"))
                     .withExposedPorts(REDIS_PORT);
     static final int DEFAULT_CODE_RESPONSE = 1000;
     @Container

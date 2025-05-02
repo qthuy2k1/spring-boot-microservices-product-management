@@ -33,8 +33,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -64,8 +66,6 @@ public class ProductService implements IProductService {
                 .productId(productModel.getId())
                 .build();
 
-        // !TODO: change requesting to inventory service from OpenFeign to Kafka
-//        inventoryClient.createInventory(inventoryRequest);
         inventoryRequestKafkaTemplate.send("create-inventory", inventoryRequest);
 
         return productMapper.toProductResponse(productModel);
@@ -143,9 +143,14 @@ public class ProductService implements IProductService {
     }
 
 
-    public List<ProductResponse> getProductByListId(Set<Integer> ids) {
-        List<ProductModel> productList = productRepository.findAllById(ids);
-        if (ids.size() != productList.size()) {
+    public List<ProductResponse> getProductByListId(String ids) {
+        Set<Integer> idsList = Arrays.stream(ids.split(","))
+                .map(String::trim) // Trim leading/trailing whitespace
+                .filter(idStr -> !idStr.isEmpty()) // Filter out empty strings after trimming
+                .map(Integer::parseInt)
+                .collect(Collectors.toSet());
+        List<ProductModel> productList = productRepository.findAllById(idsList);
+        if (idsList.size() != productList.size()) {
             throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         return productList.stream().map(productMapper::toProductResponse).toList();
