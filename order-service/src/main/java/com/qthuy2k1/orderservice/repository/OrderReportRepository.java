@@ -37,16 +37,16 @@ public class OrderReportRepository {
                     FROM orders_tbl o
                 )
                 SELECT
-                    CAST(:endDate AS DATE) - CAST(:startDate AS DATE) AS period,
-                    COUNT(*) AS totalOrders,
-                    AVG(total_amount) AS avgOrderValue,
-                    (SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'New Customer') AS newCustomers,
-                    (SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'Returning Customer') AS returningCustomers,
-                    (SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PENDING') AS pending,
-                    (SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PROCESSING') AS processing,
-                    (SELECT COUNT(*) FROM FilteredOrders WHERE status = 'SHIPPED') AS shipped,
-                    (SELECT COUNT(*) FROM FilteredOrders WHERE status = 'DELIVERED') AS delivered,
-                    (SELECT COUNT(*) FROM FilteredOrders WHERE status = 'CANCELED') AS canceled
+                    COALESCE(CAST(:endDate AS DATE) - CAST(:startDate AS DATE), 0) AS period,
+                    COALESCE(COUNT(*), 0) AS totalOrders,
+                    COALESCE(AVG(total_amount), 0) AS avgOrderValue,
+                    COALESCE((SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'New Customer'), 0) AS newCustomers,
+                    COALESCE((SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'Returning Customer'), 0) AS returningCustomers,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PENDING'), 0) AS pending,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PROCESSING'), 0) AS processing,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'SHIPPED'), 0) AS shipped,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'DELIVERED'), 0) AS delivered,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'CANCELED'), 0) AS canceled
                 FROM FilteredOrders
                 """);
         query.setParameter("startDate", startDate);

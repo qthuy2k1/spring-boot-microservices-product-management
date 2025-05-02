@@ -25,7 +25,7 @@ public class OrderModel {
     private BigDecimal totalAmount;
     private Date createdAt;
     private Date updatedAt;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.MERGE, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<OrderItemModel> orderItems;
 
 

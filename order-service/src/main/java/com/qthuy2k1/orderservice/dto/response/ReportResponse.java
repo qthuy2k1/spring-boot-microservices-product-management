@@ -18,7 +18,7 @@ public class ReportResponse {
     Long returningCustomers;
     Long pending;
     Long processing;
-    Long shipped;
+    Long shipping;
     Long delivered;
     Long canceled;
     List<ProductResponse> topSellingProducts;

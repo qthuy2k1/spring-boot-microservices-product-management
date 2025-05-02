@@ -19,7 +19,7 @@ public class OrderItemModel {
     private Integer productId;
     private Integer quantity;
     private BigDecimal price;
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id", referencedColumnName = "id", nullable = false)
     private OrderModel order;
 }

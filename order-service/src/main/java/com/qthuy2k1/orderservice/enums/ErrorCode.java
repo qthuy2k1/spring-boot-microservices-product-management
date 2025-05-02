@@ -23,7 +23,8 @@ public enum ErrorCode {
     UNAUTHORIZED(1009, "you do not have permission", HttpStatus.FORBIDDEN),
     FEIGN_ERROR(1010, "client feign error", HttpStatus.INTERNAL_SERVER_ERROR),
     START_DATE_NULL(1011, "start date must not be null", HttpStatus.BAD_REQUEST),
-    END_DATE_NULL(1012, "end date must not be null", HttpStatus.NOT_FOUND);
+    END_DATE_NULL(1012, "end date must not be null", HttpStatus.NOT_FOUND),
+    SERVICE_UNAVAILABLE(1013, "Order service is currently unavailable. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     int code;
     String message;

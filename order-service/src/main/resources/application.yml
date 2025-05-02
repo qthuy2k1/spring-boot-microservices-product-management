@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 9094
 
 spring:
   application:
@@ -33,41 +33,43 @@ spring:
 ## Eureka
 eureka:
   client:
+    enabled: true
     serviceUrl:
       defaultZone: http://eureka:password@localhost:8761/eureka
   instance:
     hostname: localhost
     prefer-ip-address: true
 
-management.endpoints.web.exposure.include: "*"
-management.endpoint.health.show-details: always
-management.health.circuitbreakers.enabled: true
-
-
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
-#  zipkin:
-#    tracing:
-#      endpoint: localhost:9411
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enable: true
+    ratelimiters:
+      enable: true
 
 # Resilience4j Properties
 resilience4j:
   circuitbreaker:
     instances:
-      user:
-        registerHealthIndicator: true
-        eventConsumerBufferSize: 10
-        slidingWindowType: COUNT_BASED
-        slidingWindowSize: 5
-        failureRateThreshold: 50
+      createOrder:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 5
         waitDurationInOpenState: 5s
-        permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-  #Resilience4J Timeout Properties
-  timelimiter.instances.user.timeout-duration: 3s
-  #Resilience4J Retry Properties
-  retry.instances.user.max-attempts: 3
-  retry.instances.user.wait-duration: 5
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        registerHealthIndicator: true
+  retry:
+    instances:
+      createOrder:
+        maxRetryAttempts: 5
+        waitDuration: 5s

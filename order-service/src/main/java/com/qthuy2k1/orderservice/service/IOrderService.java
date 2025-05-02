@@ -12,6 +12,8 @@ public interface IOrderService {
 
     OrderResponse createOrder(OrderRequest orderRequest) throws ExecutionException, InterruptedException;
 
+    OrderResponse createOrderFallback(OrderRequest orderRequest, Throwable throwable);
+
     List<OrderGraphQLResponse> getAllOrdersGraphQL();
 
     void updateOrder(Integer id, OrderRequest orderRequest);
