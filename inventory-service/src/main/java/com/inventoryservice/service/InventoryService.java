@@ -105,4 +105,11 @@ public class InventoryService implements IInventoryService {
         inventoryRepository.saveAll(updatedInventories);
         log.info("SAVED: {} ITEMS", updatedInventories.size());
     }
+
+    public void updateProductStock(InventoryRequest inventoryRequest) throws Exception {
+        InventoryModel inventory = inventoryRepository.findByProductId(inventoryRequest.getProductId())
+                .orElseThrow(() -> new Exception("product not found"));
+        inventory.setQuantity(inventoryRequest.getQuantity());
+        inventoryRepository.save(inventory);
+    }
 }

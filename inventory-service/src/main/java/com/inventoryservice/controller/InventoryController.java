@@ -28,4 +28,11 @@ public class InventoryController {
             @RequestParam("quantity") Integer quantity, @RequestParam("productId") Integer productId) {
         return inventoryService.isInStock(quantity, productId);
     }
+
+    @PostMapping("/update-product-stock")
+    @ResponseStatus(HttpStatus.OK)
+    public String updateProductStock(InventoryRequest inventoryRequest) throws Exception {
+        inventoryService.updateProductStock(inventoryRequest);
+        return "SUCCESS";
+    }
 }

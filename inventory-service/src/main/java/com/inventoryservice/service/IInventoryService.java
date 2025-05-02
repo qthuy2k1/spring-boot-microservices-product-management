@@ -7,4 +7,6 @@ public interface IInventoryService {
     void createInventory(InventoryRequest inventoryRequest);
 
     InventoryResponse isInStock(Integer quantity, Integer productId);
+
+    void updateProductStock(InventoryRequest inventoryRequest) throws Exception;
 }
