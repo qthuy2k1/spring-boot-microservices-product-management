@@ -1,6 +1,9 @@
 spring:
   datasource:
     url: jdbc:postgresql://postgres-inventory:5432/inventories_db
+  kafka:
+    bootstrap-servers:
+      - broker:9092
 
 ## Eureka
 eureka:
@@ -11,5 +14,7 @@ eureka:
     hostname: inventory-service
     prefer-ip-address: true
 
-server:
-  port: 9095
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

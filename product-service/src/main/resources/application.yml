@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 9097
 
 spring:
   application:
@@ -53,11 +53,17 @@ management.endpoint.health.show-details: always
 management.health.circuitbreakers.enabled: true
 
 
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
 # Resilience4j Properties
 resilience4j:

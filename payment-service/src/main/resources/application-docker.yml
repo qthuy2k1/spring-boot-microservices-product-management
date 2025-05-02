@@ -1,16 +1,6 @@
-server:
-  port: 9096
-
 spring:
-  application:
-    name: payment-service
   data:
     mongodb:
-      authentication-database: admin
-      username: root
-      password: example
-      database: payments_db
-      port: 27017
       host: mongo-payment
 ## Eureka
 eureka:
@@ -20,3 +10,8 @@ eureka:
   instance:
     hostname: payment-service
     prefer-ip-address: true
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

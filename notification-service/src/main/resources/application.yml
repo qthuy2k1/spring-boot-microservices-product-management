@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 9095
 
 spring:
   application:
@@ -30,11 +30,14 @@ eureka:
     hostname: localhost
 
 
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
-#  zipkin:
-#    tracing:
-#      endpoint: localhost:9411
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

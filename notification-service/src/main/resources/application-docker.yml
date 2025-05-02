@@ -1,6 +1,3 @@
-server:
-  port: 9094
-
 spring:
   application:
     name: notification-service
@@ -39,4 +36,4 @@ management:
       probability: 1.0
   zipkin:
     tracing:
-      endpoint: zipkin:9411
+      endpoint: http://zipkin:9411/api/v2/spans

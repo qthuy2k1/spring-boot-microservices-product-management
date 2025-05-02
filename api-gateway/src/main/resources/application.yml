@@ -88,21 +88,18 @@ spring:
             - Path=${app.api-prefix}/payments/**
           filters:
             - StripPrefix=2
-
   main:
     web-application-type: reactive
 
-logging:
-  level:
-    reactor:
-      netty: INFO
-    org.springframework.cloud.gateway: TRACE
 
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
-#  zipkin:
-#    tracing:
-#      endpoint: localhost:9411
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

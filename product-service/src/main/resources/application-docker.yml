@@ -1,9 +1,12 @@
-server:
-  port: 9092
-
 spring:
   datasource:
     url: jdbc:postgresql://postgres-product:5432/products_db
+  kafka:
+    bootstrap-servers:
+      - broker:9092
+  data:
+    redis:
+      host: redis
 
 ## Eureka
 eureka:
@@ -13,3 +16,8 @@ eureka:
   instance:
     hostname: product-service
     prefer-ip-address: true
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

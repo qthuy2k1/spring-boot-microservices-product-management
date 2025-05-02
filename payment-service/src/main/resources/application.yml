@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 9093
 
 spring:
   application:
@@ -25,12 +25,14 @@ eureka:
     prefer-ip-address: true
 
 
-## Zipkin
 management:
   tracing:
     sampling:
       probability: 1.0
-
-logging:
-  pattern:
-    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
