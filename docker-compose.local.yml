@@ -192,6 +192,36 @@ services:
     networks:
       - mynet
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    restart: unless-stopped
+    #    network_mode: bridge
+    volumes:
+      - ./data/prometheus/config:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    networks:
+      - mynet
+
+  grafana:
+    image:
+      grafana/grafana-oss:11.6.1
+    pull_policy: always
+    networks:
+      - mynet
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
+    ports:
+      - "3000:3000"
+
 networks:
   mynet:
     driver: bridge

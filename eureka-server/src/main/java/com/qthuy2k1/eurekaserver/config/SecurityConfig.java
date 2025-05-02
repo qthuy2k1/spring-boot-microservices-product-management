@@ -12,6 +12,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(csrf -> csrf.ignoringRequestMatchers("/eureka/**"));
+        httpSecurity.authorizeHttpRequests(request -> request.anyRequest().permitAll());
         return httpSecurity.build();
     }
 }

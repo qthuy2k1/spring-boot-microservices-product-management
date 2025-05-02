@@ -12,6 +12,7 @@ services:
       - redis:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -189,6 +190,9 @@ services:
   
   eureka-server:
     image: qthuy2k1/eureka-server:latest
+    build:
+      context: .
+      dockerfile: ./eureka-server/Dockerfile
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -199,6 +203,9 @@ services:
   
   api-gateway:
     image: qthuy2k1/api-gateway:latest
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -212,6 +219,9 @@ services:
 
   notification-service:
     image: qthuy2k1/notification-service:latest
+    build:
+      context: .
+      dockerfile: ./notification-service/Dockerfile
     container_name: notification-service
     env_file:
       - .env
@@ -224,9 +234,14 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9095:9095"
 
   order-service:
     image: qthuy2k1/order-service:latest
+    build:
+      context: .
+      dockerfile: ./order-service/Dockerfile
     container_name: order-service
     networks:
       - mynet
@@ -239,9 +254,14 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9094:9094"
 
   product-service:
     image: qthuy2k1/product-service:latest
+    build:
+      context: .
+      dockerfile: ./product-service/Dockerfile
     container_name: product-service
     networks:
       - mynet
@@ -254,9 +274,14 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9097:9097"
 
   user-service:
     image: qthuy2k1/user-service:latest
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
     container_name: user-service
     networks:
       - mynet
@@ -271,9 +296,14 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9091:9091"
 
   inventory-service:
     image: qthuy2k1/inventory-service:latest
+    build:
+      context: .
+      dockerfile: ./inventory-service/Dockerfile
     container_name: inventory-service
     networks:
       - mynet
@@ -284,19 +314,56 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "9096:9096"
 
-  payment-service:
-    image: qthuy2k1/payment-service:latest
-    container_name: payment-service
+  #  payment-service:
+  #    image: qthuy2k1/payment-service:latest
+  #    build:
+  #      context: .
+  #      dockerfile: ./payment-service/Dockerfile
+  #    container_name: payment-service
+  #    networks:
+  #      - mynet
+  #    depends_on:
+  #      eureka-server:
+  #        condition: service_started
+  #      mongo-payment:
+  #        condition: service_healthy
+  #    environment:
+  #      - SPRING_PROFILES_ACTIVE=docker
+  #    ports:
+  #      - "9093:9093"
+
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./data/prometheus/config:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
     networks:
       - mynet
-    depends_on:
-      eureka-server:
-        condition: service_started
-      mongo-payment:
-        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana-oss:11.6.1
+    pull_policy: always
+    networks:
+      - mynet
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./data/grafana:/var/lib/grafana
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
+    ports:
+      - "3000:3000"
+
 
 
 networks:

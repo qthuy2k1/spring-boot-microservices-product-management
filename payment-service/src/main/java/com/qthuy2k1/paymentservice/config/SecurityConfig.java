@@ -12,6 +12,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/actuator/prometheus").permitAll()
+                                .anyRequest().authenticated())
                 .build();
     }
 }
