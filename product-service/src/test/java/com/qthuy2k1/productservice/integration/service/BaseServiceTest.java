@@ -26,17 +26,16 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 @Testcontainers
 public abstract class BaseServiceTest {
-
-    protected static final int REDIS_PORT = 6379;
+    static final int REDIS_PORT = 6379;
     @Container
-    protected static final RedisContainer redisContainer =
+    static final RedisContainer redisContainer =
             new RedisContainer(DockerImageName.parse("redis:6.2-alpine")).withExposedPorts(REDIS_PORT);
     @Container
-    protected static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
+    static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
             "postgres:16-alpine"
     );
     @Container
-    protected static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
+    static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
     ProductModel productSaved;
     @Autowired
     ProductRepository productRepository;
