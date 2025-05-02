@@ -24,10 +24,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.Set;
@@ -44,18 +44,17 @@ public abstract class BaseControllerTest {
     static final int REDIS_PORT = 6379;
     @Container
     static final RedisContainer redisContainer =
-            new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine"))
+            new RedisContainer(DockerImageName.parse("redis:6.2-alpine"))
                     .withExposedPorts(REDIS_PORT);
     static final int DEFAULT_CODE_RESPONSE = 1000;
     static final String USER_PASSWORD = "123123";
     @Container
-    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+    static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
             "postgres:16-alpine"
     );
     @Container
-    private static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer(
-            "confluentinc/cp-kafka:7.4.0"
-    );
+    static final KafkaContainer kafkaContainer = new KafkaContainer(
+            DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
     @Autowired
     MockMvc mockMvc;
     @Autowired
@@ -79,11 +78,11 @@ public abstract class BaseControllerTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         // for postgres
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresContainer::getUsername);
+        registry.add("spring.datasource.password", postgresContainer::getPassword);
         // for kafka
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
         // for redis
         registry.add("spring.data.redis.host", redisContainer::getHost);
         registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(REDIS_PORT));
@@ -130,8 +129,8 @@ public abstract class BaseControllerTest {
     @Test
     void testContainersAreRunning() {
         assertThat(redisContainer.isRunning()).isTrue();
-        assertThat(postgres.isRunning()).isTrue();
-        assertThat(kafka.isRunning()).isTrue();
+        assertThat(postgresContainer.isRunning()).isTrue();
+        assertThat(kafkaContainer.isRunning()).isTrue();
     }
 
 

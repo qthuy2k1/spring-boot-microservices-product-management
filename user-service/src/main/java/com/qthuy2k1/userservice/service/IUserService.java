@@ -9,6 +9,8 @@ import java.util.List;
 public interface IUserService {
     UserResponse createUser(UserRequest userRequest);
 
+    UserResponse handleNotificationFallback(UserRequest userRequest, Throwable t);
+
     List<UserResponse> getAllUsers();
 
     void deleteUserById(Integer id);

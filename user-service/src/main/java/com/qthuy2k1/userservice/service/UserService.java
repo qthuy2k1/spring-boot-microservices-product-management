@@ -14,6 +14,8 @@ import com.qthuy2k1.userservice.model.Role;
 import com.qthuy2k1.userservice.model.UserModel;
 import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,34 +48,20 @@ public class UserService implements IUserService {
     RoleMapper roleMapper;
 
 
+    @Retry(name = "notificationService")
+    @CircuitBreaker(name = "notificationService", fallbackMethod = "handleNotificationFallback")
     public UserResponse createUser(UserRequest userRequest) {
-        // Check if user email already existed
-        if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
-        }
-
-        UserModel user = userMapper.toUser(userRequest);
-
-        // Encode the password using BCrypt
-        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-
-        // Check if user role already existed
-        Optional<Role> roleOptional = roleRepository.findById(RoleEnum.USER.name());
-        Role role = roleOptional.orElseGet(() -> roleMapper.toRole(roleService.create(
-                RoleRequest.builder()
-                        .name(RoleEnum.USER.name())
-                        .description("user role description")
-                        .permissions(Set.of())
-                        .build()
-        )));
-
-        user.setRoles(Set.of(role));
-        user = userRepository.save(user);
-
-        // Produce the message to kafka
+        UserModel user = createUserInDB(userRequest);
+        // Send a message to kafka topic
         kafkaTemplate.send("create-user", new UserCreated(user.getEmail()));
 
         return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse handleNotificationFallback(UserRequest userRequest, Throwable t) {
+        log.warn("Failed to send user creation event to Kafka: {}", t.getMessage());
+        // Continue user creation, just skip Kafka
+        return userMapper.toUserResponse(createUserInDB(userRequest));
     }
 
     public List<UserResponse> getAllUsers() {
@@ -136,5 +124,30 @@ public class UserService implements IUserService {
         UserModel user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserResponse(user);
+    }
+
+    private UserModel createUserInDB(UserRequest userRequest) {
+        // Check if user email already existed
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        UserModel user = userMapper.toUser(userRequest);
+
+        // Encode the password using BCrypt
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+
+        // Check if user role already existed
+        Optional<Role> roleOptional = roleRepository.findById(RoleEnum.USER.name());
+        Role role = roleOptional.orElseGet(() -> roleMapper.toRole(roleService.create(
+                RoleRequest.builder()
+                        .name(RoleEnum.USER.name())
+                        .description("user role description")
+                        .permissions(Set.of())
+                        .build()
+        )));
+
+        user.setRoles(Set.of(role));
+        return userRepository.save(user);
     }
 }

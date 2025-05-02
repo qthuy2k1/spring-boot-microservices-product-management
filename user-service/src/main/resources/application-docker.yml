@@ -9,8 +9,7 @@ spring:
       - broker:9092
   data:
     redis:
-      password:
-
+      host: redis
 
 ## Eureka
 eureka:
@@ -20,3 +19,14 @@ eureka:
   instance:
     prefer-ip-address: true
     hostname: ${spring.application.name}
+
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+#management:
+#  tracing:
+#    exporter:
+#      zipkin:
+#        endpoint: http://zipkin:9411/api/v2/spans

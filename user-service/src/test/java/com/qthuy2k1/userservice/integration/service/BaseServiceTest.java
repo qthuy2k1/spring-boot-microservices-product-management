@@ -31,11 +31,11 @@ public abstract class BaseServiceTest {
     static final int REDIS_PORT = 6379;
     @Container
     static final RedisContainer redisContainer =
-            new RedisContainer(DockerImageName.parse("redis:5.0.3-alpine"))
+            new RedisContainer(DockerImageName.parse("redis:6.2-alpine"))
                     .withExposedPorts(REDIS_PORT);
     static final String USER_PASSWORD = "123123";
     @Container
-    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
+    static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
             "postgres:16-alpine"
     );
     final RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
