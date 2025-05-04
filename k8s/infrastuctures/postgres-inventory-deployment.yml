@@ -21,7 +21,7 @@ spec:
             - name: PGDATA
               value: /data/postgres
             - name: POSTGRES_DB
-              value: inventorys_db
+              value: inventories_db
             - name: POSTGRES_PASSWORD
               value: root
             - name: POSTGRES_USER

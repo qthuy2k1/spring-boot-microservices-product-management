@@ -16,8 +16,6 @@ spec:
     spec:
       containers:
         - env:
-            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
-              value: ' TRACE'
             - name: SPRING_PROFILES_ACTIVE
               value: docker
           image: qthuy2k1/api-gateway:latest

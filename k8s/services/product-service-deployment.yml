@@ -24,7 +24,7 @@ spec:
           resources: { }
           imagePullPolicy: Always
           ports:
-            - containerPort: 9092
+            - containerPort: 9097
       restartPolicy: Always
 status: { }
 ---
@@ -37,7 +37,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 9092
+      targetPort: 9097
   #  type: LoadBalancer
   selector:
     app: product-service

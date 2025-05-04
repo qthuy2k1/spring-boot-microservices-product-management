@@ -35,7 +35,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 9096
+      targetPort: 9093
   selector:
     app: payment-service
 status:
