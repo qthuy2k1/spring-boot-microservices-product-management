@@ -11,27 +11,26 @@ import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
 import com.qthuy2k1.productservice.mapper.ProductCategoryMapper;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.List;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 
 @SpringBootTest(
@@ -68,17 +67,17 @@ public class ProductControllerTest extends BaseControllerTest {
                 .category(productCategoryMapper.toProductCategoryResponse(productCategorySaved))
                 .build();
 
-        MvcResult createProductResult = mockMvc.perform(post("/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productRequest)))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andReturn();
-
+        String createProductResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(productRequest))
+                .when().post("/products")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         // Deserialize the JSON response into ApiResponse<UserResponse>
         ApiResponse<ProductResponse> createProductApiResponse = objectMapper.readValue(
-                createProductResult.getResponse().getContentAsByteArray(),
+                createProductResponseBody,
                 new TypeReference<ApiResponse<ProductResponse>>() {
                 }
         );
@@ -93,15 +92,15 @@ public class ProductControllerTest extends BaseControllerTest {
         assertThat(createProductApiResponse.getResult().getThumbnail()).isEqualTo(expectedProductResponse.getThumbnail());
         assertThat(createProductApiResponse.getResult().getCategory()).isEqualTo(expectedProductResponse.getCategory());
 
-        MvcResult getAllProductsResult = mockMvc.perform(get("/products")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
+        String getAllProductsResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/products")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
-                getAllProductsResult.getResponse().getContentAsByteArray(),
+                getAllProductsResponseBody,
                 new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
                 }
         );
@@ -129,30 +128,31 @@ public class ProductControllerTest extends BaseControllerTest {
                 .categoryId(1)
                 .build();
 
-
         ApiResponse<ProductResponse> apiResponse = ApiResponse.<ProductResponse>builder()
                 .code(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getCode())
                 .message(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getMessage())
                 .build();
-        mockMvc.perform(post("/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(productRequest))
+                .when().post("/products")
+                .then().statusCode(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
     void getAllProducts() throws Exception {
-        MvcResult getAllProductsResult = mockMvc.perform(get("/products")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
+        String getAllProductsResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/products")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
-                getAllProductsResult.getResponse().getContentAsByteArray(),
+                getAllProductsResponseBody,
                 new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
                 }
         );
@@ -181,7 +181,6 @@ public class ProductControllerTest extends BaseControllerTest {
         assertThat(productCreated2.getCategory()).isEqualTo(productCategoryMapper.toProductCategoryResponse(productSaved2.getCategory()));
     }
 
-
     @Test
     void deleteProductById() throws Exception {
         int id = productSaved1.getId();
@@ -189,21 +188,21 @@ public class ProductControllerTest extends BaseControllerTest {
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
-        mockMvc.perform(delete("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().delete("/products/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
 
-        MvcResult getAllProductsResult = mockMvc.perform(get("/products")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
-
-
+        String getAllProductsResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/products")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
         ApiResponse<PaginatedResponse<ProductResponse>> getAllProductsApiResponse = objectMapper.readValue(
-                getAllProductsResult.getResponse().getContentAsByteArray(),
+                getAllProductsResponseBody,
                 new TypeReference<ApiResponse<PaginatedResponse<ProductResponse>>>() {
                 }
         );
@@ -225,16 +224,16 @@ public class ProductControllerTest extends BaseControllerTest {
     @Test
     void deleteProductById_ExceptionThrown_ProductNotFound() throws Exception {
         int id = productSaved2.getId() + 1;
-
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(ErrorCode.PRODUCT_NOT_FOUND.getCode())
                 .message(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(delete("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().delete("/products/" + id)
+                .then().statusCode(ErrorCode.PRODUCT_NOT_FOUND.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -259,12 +258,13 @@ public class ProductControllerTest extends BaseControllerTest {
         ApiResponse<ProductResponse> apiResponse = ApiResponse.<ProductResponse>builder()
                 .result(expectProductResponse)
                 .build();
-        mockMvc.perform(put("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productRequest)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(productRequest))
+                .when().put("/products/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -283,26 +283,27 @@ public class ProductControllerTest extends BaseControllerTest {
                 .code(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getCode())
                 .message(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getMessage())
                 .build();
-        mockMvc.perform(put("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(productRequest))
+                .when().put("/products/" + id)
+                .then().statusCode(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
     void getProductById() throws Exception {
         int id = productSaved1.getId();
-
-        MvcResult result = mockMvc.perform(get("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String getProductResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/products/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<ProductResponse> getProductResponse = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(),
+                getProductResponseBody,
                 new TypeReference<ApiResponse<ProductResponse>>() {
                 }
         );
@@ -328,10 +329,11 @@ public class ProductControllerTest extends BaseControllerTest {
                 .code(ErrorCode.PRODUCT_NOT_FOUND.getCode())
                 .message(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(get("/products/" + id)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/products/" + id)
+                .then().statusCode(ErrorCode.PRODUCT_NOT_FOUND.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 }

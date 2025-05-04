@@ -10,27 +10,23 @@ import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.mapper.PermissionMapper;
 import com.qthuy2k1.userservice.repository.UserRepository;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 import java.util.Set;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -61,17 +57,17 @@ public class RoleControllerTest extends BaseControllerTest {
                 .permissions(Set.of(permissionMapper.toPermissionResponse(permissionSaved)))
                 .build();
 
-        MvcResult createRoleResult = mockMvc.perform(post("/roles")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(roleRequest)))
-                .andExpect(status().isCreated())
-                .andDo(print())
-                .andReturn();
+        String createRoleResponseBody = given()
+                .contentType(ContentType.JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .body(objectMapper.writeValueAsString(roleRequest))
+                .when().post("/roles")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         // Deserialize the JSON response into ApiResponse<RoleResponse>
         ApiResponse<RoleResponse> createRoleApiResponse = objectMapper.readValue(
-                createRoleResult.getResponse().getContentAsByteArray(),
+                createRoleResponseBody,
                 new TypeReference<ApiResponse<RoleResponse>>() {
                 }
         );
@@ -84,15 +80,15 @@ public class RoleControllerTest extends BaseControllerTest {
         assertThat(createRoleApiResponse.getResult().getPermissions()).isEqualTo(expectedRoleResponse.getPermissions());
 
         // getAllRoles method
-        MvcResult getAllRolesResult = mockMvc.perform(get("/roles")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
+        String getAllRolesResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/roles")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<RoleResponse>> getAllRolesApiResponse = objectMapper.readValue(
-                getAllRolesResult.getResponse().getContentAsByteArray(),
+                getAllRolesResponseBody,
                 new TypeReference<ApiResponse<List<RoleResponse>>>() {
                 }
         );
@@ -109,24 +105,23 @@ public class RoleControllerTest extends BaseControllerTest {
         ApiResponse<String> deleteRoleApiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
-        mockMvc.perform(MockMvcRequestBuilders.delete("/roles/" + roleCreated.getName())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(deleteRoleApiResponse)))
-                .andDo(print());
-
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().delete("/roles/" + roleCreated.getName())
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(deleteRoleApiResponse)));
 
         // for getAllRoles method
-        MvcResult getAllRolesResult2 = mockMvc.perform(get("/roles")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
+        String getAllRolesResponseBody2 = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/roles")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<RoleResponse>> getAllRolesApiResponse2 = objectMapper.readValue(
-                getAllRolesResult2.getResponse().getContentAsByteArray(),
+                getAllRolesResponseBody2,
                 new TypeReference<ApiResponse<List<RoleResponse>>>() {
                 }
         );
@@ -149,13 +144,13 @@ public class RoleControllerTest extends BaseControllerTest {
                 .code(ErrorCode.ROLE_EXISTED.getCode())
                 .message(ErrorCode.ROLE_EXISTED.getMessage())
                 .build();
-        mockMvc.perform(post("/roles")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(roleRequest)))
-                .andExpect(status().isBadRequest())
-                .andDo(print())
-                .andExpect(content().string(objectMapper.writeValueAsString(createRoleApiResponse)));
+        given()
+                .contentType(ContentType.JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .body(objectMapper.writeValueAsString(roleRequest))
+                .when().post("/roles")
+                .then().statusCode(HttpStatus.BAD_REQUEST.value())
+                .body(equalTo(objectMapper.writeValueAsString(createRoleApiResponse)));
     }
 
 }

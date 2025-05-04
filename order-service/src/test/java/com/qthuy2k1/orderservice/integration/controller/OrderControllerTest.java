@@ -9,15 +9,15 @@ import com.qthuy2k1.orderservice.enums.ErrorCode;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
 import com.qthuy2k1.orderservice.repository.feign.UserClient;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,15 +25,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -42,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @ExtendWith(SpringExtension.class)
 @DirtiesContext
-@WithMockUser(username = "test", roles = "ADMIN")
 public class OrderControllerTest extends BaseControllerTest {
     @MockBean
     InventoryClient inventoryClient;
@@ -100,15 +96,16 @@ public class OrderControllerTest extends BaseControllerTest {
         when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
-        MvcResult createOrderResult = mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(orderRequest)))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andReturn();
+        String createOrderResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().post("/orders")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         ApiResponse<OrderResponse> createOrderApiResponse = objectMapper.readValue(
-                createOrderResult.getResponse().getContentAsByteArray(),
+                createOrderResponseBody,
                 new TypeReference<ApiResponse<OrderResponse>>() {
                 }
         );
@@ -178,12 +175,14 @@ public class OrderControllerTest extends BaseControllerTest {
                 .message(ErrorCode.SERVICE_UNAVAILABLE.getMessage())
                 .build();
 
-        mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(orderRequest)))
-                .andDo(print())
-                .andExpect(status().is5xxServerError())
-                .andExpect(content().string(objectMapper.writeValueAsString(orderApiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().post("/orders")
+                .then().statusCode(ErrorCode.SERVICE_UNAVAILABLE.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(orderApiResponse)));
+
     }
 
     @Test
@@ -224,12 +223,13 @@ public class OrderControllerTest extends BaseControllerTest {
                 .message(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
                 .build();
 
-        mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(orderRequest)))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(orderApiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().post("/orders")
+                .then().statusCode(ErrorCode.PRODUCT_NOT_FOUND.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(orderApiResponse)));
     }
 
     @Test
@@ -274,13 +274,13 @@ public class OrderControllerTest extends BaseControllerTest {
                 .code(ErrorCode.USER_NOT_FOUND.getCode())
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
-
-        mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(orderRequest)))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(orderApiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().post("/orders")
+                .then().statusCode(ErrorCode.USER_NOT_FOUND.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(orderApiResponse)));
     }
 
     @Test
@@ -330,13 +330,13 @@ public class OrderControllerTest extends BaseControllerTest {
                 .code(ErrorCode.PRODUCT_OUT_OF_STOCK.getCode())
                 .message(ErrorCode.PRODUCT_OUT_OF_STOCK.getMessage())
                 .build();
-
-        mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(orderRequest)))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(orderApiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().post("/orders")
+                .then().statusCode(ErrorCode.PRODUCT_OUT_OF_STOCK.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(orderApiResponse)));
     }
 
     @Test
@@ -374,16 +374,17 @@ public class OrderControllerTest extends BaseControllerTest {
 
         when(productClient.getProductsByListId(any())).thenReturn(expectedProductApiResponse);
 
-        MvcResult createOrderResult = mockMvc.perform(get("/orders/report")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .queryParam("startDate", startDate)
-                        .queryParam("endDate", endDate))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String getReportResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .queryParam("startDate", startDate)
+                .queryParam("endDate", endDate)
+                .when().get("/orders/report")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<ReportResponse> createOrderApiResponse = objectMapper.readValue(
-                createOrderResult.getResponse().getContentAsByteArray(),
+                getReportResponseBody,
                 new TypeReference<ApiResponse<ReportResponse>>() {
                 }
         );

@@ -12,18 +12,17 @@ import com.qthuy2k1.userservice.repository.PermissionRepository;
 import com.qthuy2k1.userservice.repository.RoleRepository;
 import com.qthuy2k1.userservice.repository.UserRepository;
 import com.redis.testcontainers.RedisContainer;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -32,11 +31,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Set;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Testcontainers
 @AutoConfigureMockMvc
@@ -56,16 +52,14 @@ public abstract class BaseControllerTest {
     static final KafkaContainer kafkaContainer = new KafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
     @Autowired
-    MockMvc mockMvc;
-    @Autowired
     ObjectMapper objectMapper;
     UserModel userSaved1;
     UserModel userSaved2;
     Role userRoleSaved;
     Role adminRoleSaved;
     Permission permissionSaved;
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+    @LocalServerPort
+    int serverPort;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -90,9 +84,8 @@ public abstract class BaseControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .build();
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        RestAssured.port = serverPort;
 
         userRepository.deleteAll();
         roleRepository.deleteAll();
@@ -140,16 +133,15 @@ public abstract class BaseControllerTest {
                 .email(userSaved1.getEmail())
                 .password(USER_PASSWORD)
                 .build();
-        MvcResult authResult = mockMvc.perform(post("/auth/token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(authRequest)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+
+        String authResponseBody = given()
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(authRequest))
+                .when().post("/auth/token")
+                .then().statusCode(HttpStatus.OK.value()).extract().asString();
 
         // Deserialize the JSON response into ApiResponse<AuthenticationResponse>
         ApiResponse<AuthenticationResponse> authResponse = objectMapper.readValue(
-                authResult.getResponse().getContentAsByteArray(),
+                authResponseBody,
                 new TypeReference<ApiResponse<AuthenticationResponse>>() {
                 }
         );
@@ -166,19 +158,14 @@ public abstract class BaseControllerTest {
                 .email(user.getEmail())
                 .password(USER_PASSWORD)
                 .build();
-        MvcResult authResult = mockMvc.perform(post("/auth/token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(authRequest)))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
-
-        // Get the response content as a byte array
-        byte[] authResponseBytes = authResult.getResponse().getContentAsByteArray();
+        String authResponseBody = given()
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(authRequest))
+                .when().post("/auth/token")
+                .then().statusCode(HttpStatus.OK.value()).extract().asString();
 
         // Deserialize the JSON response into ApiResponse<UserResponse>
         ApiResponse<AuthenticationResponse> authResponse = objectMapper.readValue(
-                authResponseBytes,
+                authResponseBody,
                 new TypeReference<ApiResponse<AuthenticationResponse>>() {
                 }
         );

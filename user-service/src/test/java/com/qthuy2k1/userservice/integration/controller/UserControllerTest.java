@@ -11,26 +11,23 @@ import com.qthuy2k1.userservice.dto.response.RoleResponse;
 import com.qthuy2k1.userservice.dto.response.UserResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
 import com.qthuy2k1.userservice.mapper.RoleMapper;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import static org.hamcrest.core.IsEqual.equalTo;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -49,7 +46,6 @@ class UserControllerTest extends BaseControllerTest {
                 .email("doe@gmail.com")
                 .password("123123")
                 .build();
-        String userRequestString = objectMapper.writeValueAsString(userRequest);
 
         UserResponse expectedUserResponse = UserResponse.builder()
                 .name("John Doe")
@@ -57,16 +53,15 @@ class UserControllerTest extends BaseControllerTest {
                 .roles(Set.of(roleMapper.toRoleResponse(userRoleSaved)))
                 .build();
 
-        MvcResult createUserResult = mockMvc.perform(post("/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userRequestString))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andReturn();
+        String createUserResponseBody = given()
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(userRequest))
+                .when().post("/users/register")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         // Deserialize the JSON response into ApiResponse<UserResponse>
         ApiResponse<UserResponse> createUserApiResponse = objectMapper.readValue(
-                createUserResult.getResponse().getContentAsByteArray(),
+                createUserResponseBody,
                 new TypeReference<ApiResponse<UserResponse>>() {
                 }
         );
@@ -79,15 +74,16 @@ class UserControllerTest extends BaseControllerTest {
         assertThat(createUserApiResponse.getResult().getRoles()).isEqualTo(expectedUserResponse.getRoles());
 
         String authToken = login();
-        MvcResult getAllUsersResult = mockMvc.perform(get("/users")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+
+        String getAllUsersResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<UserResponse>> getAllUsersApiResponse = objectMapper.readValue(
-                getAllUsersResult.getResponse().getContentAsByteArray(),
+                getAllUsersResponseBody,
                 new TypeReference<ApiResponse<List<UserResponse>>>() {
                 }
         );
@@ -104,15 +100,15 @@ class UserControllerTest extends BaseControllerTest {
     @Test
     void getAllUsers() throws Exception {
         String authToken = login();
-        MvcResult getAllUsersResult = mockMvc.perform(get("/users")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String getAllUsersResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<UserResponse>> getAllUsersApiResponse = objectMapper.readValue(
-                getAllUsersResult.getResponse().getContentAsByteArray(),
+                getAllUsersResponseBody,
                 new TypeReference<ApiResponse<List<UserResponse>>>() {
                 }
         );
@@ -134,12 +130,12 @@ class UserControllerTest extends BaseControllerTest {
                 .code(ErrorCode.UNAUTHORIZED.getCode())
                 .message(ErrorCode.UNAUTHORIZED.getMessage())
                 .build();
-        mockMvc.perform(get("/users")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users")
+                .then().statusCode(HttpStatus.FORBIDDEN.value())
+                .assertThat().body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -149,19 +145,16 @@ class UserControllerTest extends BaseControllerTest {
                 .email("doe@gmail.com") // invalid email address
                 .password("123123")
                 .build();
-        String userRequestString = objectMapper.writeValueAsString(userRequest);
 
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(ErrorCode.USERNAME_BLANK.getCode())
                 .message(ErrorCode.USERNAME_BLANK.getMessage())
                 .build();
-        mockMvc.perform(post("/users/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userRequestString))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)))
-                .andReturn();
+        given()
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(userRequest))
+                .when().post("/users/register")
+                .then().statusCode(HttpStatus.BAD_REQUEST.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -172,24 +165,23 @@ class UserControllerTest extends BaseControllerTest {
         ApiResponse<String> deleteUserApiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
-        mockMvc.perform(delete("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(deleteUserApiResponse)));
-
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().delete("/users/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(deleteUserApiResponse)));
 
         ApiResponse<UserResponse> getUserApiResponse = ApiResponse.<UserResponse>builder()
                 .code(ErrorCode.USER_NOT_FOUND.getCode())
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(get("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(getUserApiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + id)
+                .then().statusCode(HttpStatus.NOT_FOUND.value())
+                .assertThat().body(equalTo(objectMapper.writeValueAsString(getUserApiResponse)));
     }
 
     @Test
@@ -201,12 +193,12 @@ class UserControllerTest extends BaseControllerTest {
                 .code(ErrorCode.USER_NOT_FOUND.getCode())
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(delete("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().delete("/users/" + id)
+                .then().statusCode(HttpStatus.NOT_FOUND.value())
+                .assertThat().body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
 
@@ -220,7 +212,6 @@ class UserControllerTest extends BaseControllerTest {
                 .password(USER_PASSWORD)
                 .roles(List.of(userRoleSaved.getName()))
                 .build();
-        String userRequestString = objectMapper.writeValueAsString(userRequest);
 
         UserResponse expectedUserResponse = UserResponse.builder()
                 .id(userSaved1.getId())
@@ -232,13 +223,12 @@ class UserControllerTest extends BaseControllerTest {
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .result(expectedUserResponse)
                 .build();
-        mockMvc.perform(put("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userRequestString))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(userRequest))
+                .when().put("/users/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .assertThat().body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -250,19 +240,17 @@ class UserControllerTest extends BaseControllerTest {
                 .email("doe@gmail.com") // invalid email address
                 .password(USER_PASSWORD)
                 .build();
-        String userRequestString = objectMapper.writeValueAsString(userRequest);
 
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(ErrorCode.USERNAME_BLANK.getCode())
                 .message(ErrorCode.USERNAME_BLANK.getMessage())
                 .build();
-        mockMvc.perform(put("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userRequestString))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON).body(objectMapper.writeValueAsString(userRequest))
+                .when().put("/users/" + id)
+                .then().statusCode(HttpStatus.BAD_REQUEST.value())
+                .assertThat().body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -280,16 +268,15 @@ class UserControllerTest extends BaseControllerTest {
         ApiResponse<UserResponse> expectedApiResponse = ApiResponse.<UserResponse>builder()
                 .result(expectedUserResponse)
                 .build();
-        MvcResult result = mockMvc.perform(get("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String userResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + id)
+                .then().statusCode(HttpStatus.OK.value()).extract().asString();
 
         // Deserialize the JSON response into ApiResponse<UserResponse>
         ApiResponse<UserResponse> getUserResponse = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(),
+                userResponseBody,
                 new TypeReference<ApiResponse<UserResponse>>() {
                 }
         );
@@ -304,37 +291,36 @@ class UserControllerTest extends BaseControllerTest {
     @Test
     void getUserById_ExceptionThrown_UserNotFound() throws Exception {
         String authToken = login();
-
         int id = userSaved2.getId() + 1;
 
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(ErrorCode.USER_NOT_FOUND.getCode())
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(get("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + id)
+                .then().statusCode(HttpStatus.NOT_FOUND.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
     void getUserById_ExceptionThrown_Unauthorized() throws Exception {
         String authToken = login(userSaved2); // not have admin role
-
         int id = userSaved2.getId();
 
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .code(ErrorCode.UNAUTHORIZED.getCode())
                 .message(ErrorCode.UNAUTHORIZED.getMessage())
                 .build();
-        mockMvc.perform(get("/users/" + id)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + id)
+                .then().statusCode(HttpStatus.FORBIDDEN.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -351,34 +337,35 @@ class UserControllerTest extends BaseControllerTest {
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .result(expectedUserResponse)
                 .build();
-        mockMvc.perform(get("/users/my-info")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/my-info")
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
     void existsById() throws Exception {
         String authToken = login();
-        mockMvc.perform(get("/users/" + userSaved2.getId() + "/is-exists")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + userSaved2.getId() + "/is-exists")
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo("true"));
     }
 
     @Test
     void existsById_UserNotFound() throws Exception {
         String authToken = login();
-        mockMvc.perform(get("/users/" + userSaved2.getId() + 1 + "/is-exists")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/" + userSaved2.getId() + 1 + "/is-exists")
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo("false"));
     }
 
     @Test
@@ -395,12 +382,12 @@ class UserControllerTest extends BaseControllerTest {
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .result(expectedUserResponse)
                 .build();
-        mockMvc.perform(get("/users/email/" + userSaved1.getEmail())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/email/" + userSaved1.getEmail())
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 
     @Test
@@ -411,11 +398,11 @@ class UserControllerTest extends BaseControllerTest {
                 .code(ErrorCode.USER_NOT_FOUND.getCode())
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
-        mockMvc.perform(get("/users/email/" + userSaved1.getEmail() + "notfound")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(objectMapper.writeValueAsString(apiResponse)));
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/users/email/" + userSaved1.getEmail() + "notfound")
+                .then().statusCode(HttpStatus.NOT_FOUND.value())
+                .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
     }
 }

@@ -8,25 +8,21 @@ import com.qthuy2k1.userservice.dto.response.ApiResponse;
 import com.qthuy2k1.userservice.dto.response.MessageResponse;
 import com.qthuy2k1.userservice.dto.response.PermissionResponse;
 import com.qthuy2k1.userservice.enums.ErrorCode;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -51,16 +47,17 @@ public class PermissionControllerTest extends BaseControllerTest {
                 .description("new permission description")
                 .build();
 
-        MvcResult createPermissionResult = mockMvc.perform(post("/permissions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .content(objectMapper.writeValueAsString(permissionRequest)))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andReturn();
+        String createPermissionResponseBody = given()
+                .contentType(ContentType.JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .body(objectMapper.writeValueAsString(permissionRequest))
+                .when().post("/permissions")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         // Deserialize the JSON response into ApiResponse<UserResponse>
-        ApiResponse<PermissionResponse> createPermissionApiResponse = objectMapper.readValue(createPermissionResult.getResponse().getContentAsByteArray(),
+        ApiResponse<PermissionResponse> createPermissionApiResponse = objectMapper.readValue(
+                createPermissionResponseBody,
                 new TypeReference<ApiResponse<PermissionResponse>>() {
                 }
         );
@@ -72,14 +69,15 @@ public class PermissionControllerTest extends BaseControllerTest {
         assertThat(createPermissionApiResponse.getResult().getDescription()).isEqualTo(expectedPermissionResponse.getDescription());
 
         // getAllPermissions method
-        MvcResult getAllPermissionResult = mockMvc.perform(get("/permissions")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String getAllPermissionsResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/permissions")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
-        ApiResponse<List<PermissionResponse>> getAllPermissionsApiResponse = objectMapper.readValue(getAllPermissionResult.getResponse().getContentAsByteArray(),
+        ApiResponse<List<PermissionResponse>> getAllPermissionsApiResponse = objectMapper.readValue(
+                getAllPermissionsResponseBody,
                 new TypeReference<ApiResponse<List<PermissionResponse>>>() {
                 }
         );
@@ -95,23 +93,23 @@ public class PermissionControllerTest extends BaseControllerTest {
         ApiResponse<String> deletePermissionApiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
-        mockMvc.perform(MockMvcRequestBuilders.delete("/permissions/" + permissionCreated.getName())
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string(objectMapper.writeValueAsString(deletePermissionApiResponse)))
-                .andDo(print());
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().delete("/permissions/" + permissionCreated.getName())
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(objectMapper.writeValueAsString(deletePermissionApiResponse)));
 
         // getAllPermissions method
-        MvcResult getAllPermissionResult2 = mockMvc.perform(get("/permissions")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        String getAllPermissionsResponseBody2 = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .contentType(ContentType.JSON)
+                .when().get("/permissions")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<PermissionResponse>> getAllPermissionsApiResponse2 = objectMapper.readValue(
-                getAllPermissionResult2.getResponse().getContentAsByteArray(),
+                getAllPermissionsResponseBody2,
                 new TypeReference<ApiResponse<List<PermissionResponse>>>() {
                 }
         );
@@ -132,12 +130,12 @@ public class PermissionControllerTest extends BaseControllerTest {
                 .code(ErrorCode.PERMISSION_EXISTED.getCode())
                 .message(ErrorCode.PERMISSION_EXISTED.getMessage())
                 .build();
-        mockMvc.perform(post("/permissions")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(permissionRequest)))
-                .andExpect(status().isBadRequest())
-                .andDo(print())
-                .andExpect(content().string(objectMapper.writeValueAsString(createPermissionApiResponse)));
+        given()
+                .contentType(ContentType.JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
+                .body(objectMapper.writeValueAsString(permissionRequest))
+                .when().post("/permissions")
+                .then().statusCode(HttpStatus.BAD_REQUEST.value())
+                .body(equalTo(objectMapper.writeValueAsString(createPermissionApiResponse)));
     }
 }

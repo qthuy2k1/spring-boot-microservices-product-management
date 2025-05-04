@@ -6,15 +6,14 @@ import com.qthuy2k1.orderservice.model.OrderModel;
 import com.qthuy2k1.orderservice.repository.OrderItemRepository;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import com.qthuy2k1.orderservice.service.OrderService;
+import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Testcontainers
 @AutoConfigureMockMvc
@@ -39,8 +37,7 @@ public abstract class BaseControllerTest {
     @Container
     static final KafkaContainer kafkaContainer = new KafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
-    @Autowired
-    MockMvc mockMvc;
+    static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJxdGh1eSIsImlhdCI6MTc0NjI4NTQyNCwiZXhwIjoxNzc3ODIxNDI0LCJhdWQiOiIiLCJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJzY29wZSI6IlJPTEVfQURNSU4iLCJqaXQiOiIzNmZkNDcwNC1jZmFlLTQ2NWItYTRmZC01ZGE4ODQxNTk4NTcifQ.AowohKT3WWA7gDF54Muc4r8-TohePygITUvrqYl4m7p15pHFQIMJd6683otqxr4KSVNZ75WsT2L7PBaGnobAww";
     @Autowired
     ObjectMapper objectMapper;
     OrderModel savedOrder;
@@ -52,8 +49,8 @@ public abstract class BaseControllerTest {
     OrderService orderService;
     OrderItemModel savedOrderItem1;
     OrderItemModel savedOrderItem2;
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+    @LocalServerPort
+    int serverPort;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -67,9 +64,7 @@ public abstract class BaseControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .build();
+        RestAssured.port = serverPort;
 
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();

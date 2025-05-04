@@ -5,22 +5,20 @@ import com.qthuy2k1.productservice.ProductApplication;
 import com.qthuy2k1.productservice.dto.request.ProductCategoryRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.ProductCategoryResponse;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -42,15 +40,16 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
                 .description("category description 1")
                 .build();
 
-        MvcResult createProductCategoryResult = mockMvc.perform(post("/product-categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productCategoryRequest)))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andReturn();
+        String createProductCategoryResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(productCategoryRequest))
+                .when().post("/product-categories")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().asString();
 
         ApiResponse<ProductCategoryResponse> createProductCategoryApiResponse = objectMapper.readValue(
-                createProductCategoryResult.getResponse().getContentAsByteArray(),
+                createProductCategoryResponseBody,
                 new TypeReference<ApiResponse<ProductCategoryResponse>>() {
                 }
         );
@@ -60,13 +59,15 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
         assertThat(createProductCategoryApiResponse.getResult().getName()).isEqualTo(expectedProductCategoryResponse.getName());
         assertThat(createProductCategoryApiResponse.getResult().getDescription()).isEqualTo(expectedProductCategoryResponse.getDescription());
 
-        MvcResult getAllCategoriesResult = mockMvc.perform(get("/product-categories"))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
+        String getAllProductCategoriesResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/product-categories")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
 
         ApiResponse<List<ProductCategoryResponse>> getAllProductCategoriesApiResponse = objectMapper.readValue(
-                getAllCategoriesResult.getResponse().getContentAsByteArray(),
+                getAllProductCategoriesResponseBody,
                 new TypeReference<ApiResponse<List<ProductCategoryResponse>>>() {
                 }
         );
@@ -80,13 +81,14 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
 
     @Test
     void getAllCategories() throws Exception {
-        MvcResult getAllCategoriesResult = mockMvc.perform(get("/product-categories"))
-                .andExpect(status().isOk())
-                .andDo(print())
-                .andReturn();
-
+        String getAllProductCategoriesResponseBody = given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/product-categories")
+                .then().statusCode(HttpStatus.OK.value())
+                .extract().asString();
         ApiResponse<List<ProductCategoryResponse>> getAllProductCategoriesApiResponse = objectMapper.readValue(
-                getAllCategoriesResult.getResponse().getContentAsByteArray(),
+                getAllProductCategoriesResponseBody,
                 new TypeReference<ApiResponse<List<ProductCategoryResponse>>>() {
                 }
         );
