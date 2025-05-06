@@ -1,5 +1,6 @@
 package com.qthuy2k1.orderservice.integration.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qthuy2k1.orderservice.OrderApplication;
 import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
@@ -452,5 +453,63 @@ public class OrderControllerTest extends BaseControllerTest {
         assertThat(productResponse2.getPrice())
                 .as("Check product 2 price")
                 .isEqualTo(expectedProduct1.getPrice());
+    }
+
+    @Test
+    void updateOrder() throws JsonProcessingException {
+        int id = savedOrder.getId();
+        OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
+                .price(BigDecimal.valueOf(1000))
+                .productId(1)
+                .quantity(1)
+                .build();
+
+        OrderItemRequest orderItemRequest2 = OrderItemRequest.builder()
+                .price(BigDecimal.valueOf(2000))
+                .productId(2)
+                .quantity(2)
+                .build();
+        OrderRequest orderRequest = OrderRequest.builder()
+                .orderItem(Set.of(orderItemRequest1, orderItemRequest2))
+                .build();
+
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().put("/orders/" + id)
+                .then().statusCode(HttpStatus.OK.value())
+                .body(equalTo(MessageResponse.SUCCESS));
+    }
+
+    @Test
+    void updateOrder_OrderNotFound() throws JsonProcessingException {
+        int id = savedOrder.getId() + 1;
+        OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
+                .price(BigDecimal.valueOf(1000))
+                .productId(1)
+                .quantity(1)
+                .build();
+
+        OrderItemRequest orderItemRequest2 = OrderItemRequest.builder()
+                .price(BigDecimal.valueOf(2000))
+                .productId(2)
+                .quantity(2)
+                .build();
+        OrderRequest orderRequest = OrderRequest.builder()
+                .orderItem(Set.of(orderItemRequest1, orderItemRequest2))
+                .build();
+
+        ApiResponse<OrderResponse> orderApiResponse = ApiResponse.<OrderResponse>builder()
+                .code(ErrorCode.ORDER_NOT_FOUND.getCode())
+                .message(ErrorCode.ORDER_NOT_FOUND.getMessage())
+                .build();
+        given()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .contentType(ContentType.JSON)
+                .body(objectMapper.writeValueAsString(orderRequest))
+                .when().put("/orders/" + id)
+                .then().statusCode(ErrorCode.ORDER_NOT_FOUND.getStatusCode().value())
+                .body(equalTo(objectMapper.writeValueAsString(orderApiResponse)));
     }
 }

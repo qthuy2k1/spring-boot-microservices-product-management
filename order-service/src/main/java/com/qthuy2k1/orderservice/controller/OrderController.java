@@ -2,6 +2,7 @@ package com.qthuy2k1.orderservice.controller;
 
 import com.qthuy2k1.orderservice.dto.request.OrderRequest;
 import com.qthuy2k1.orderservice.dto.response.ApiResponse;
+import com.qthuy2k1.orderservice.dto.response.MessageResponse;
 import com.qthuy2k1.orderservice.dto.response.OrderResponse;
 import com.qthuy2k1.orderservice.dto.response.ReportResponse;
 import com.qthuy2k1.orderservice.service.IOrderService;
@@ -36,7 +37,7 @@ public class OrderController {
     @PutMapping("{id}")
     public ResponseEntity<String> updateOrder(@PathVariable("id") int id, @RequestBody OrderRequest orderRequest) {
         orderService.updateOrder(id, orderRequest);
-        return new ResponseEntity<>("Success", HttpStatus.OK);
+        return new ResponseEntity<>(MessageResponse.SUCCESS, HttpStatus.OK);
     }
 
     @GetMapping("/report")
