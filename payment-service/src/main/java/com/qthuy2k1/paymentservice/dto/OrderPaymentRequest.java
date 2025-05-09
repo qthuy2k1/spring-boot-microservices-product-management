@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 @Getter
-public class OrderPaymentDTO {
+public class OrderPaymentRequest {
     private Integer orderId;
     private BigDecimal amount;
 }

@@ -1,7 +1,5 @@
 package com.qthuy2k1.paymentservice.config;
 
-//import jakarta.servlet.http.HttpServletRequest;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -9,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-public class Config {
+public class VNPayConfig {
 
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static String vnp_ReturnUrl = "http://localhost:8080/api/v1/payments/payment-info";
@@ -38,7 +36,7 @@ public class Config {
         return digest;
     }
 
-    public static String Sha256(String message) {
+    public static String sha256(String message) {
         String digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -54,7 +52,7 @@ public class Config {
         return digest;
     }
 
-    //Util for VNPAY
+    // Utils for VNPAY
     public static String hashAllFields(Map fields) {
         List fieldNames = new ArrayList(fields.keySet());
         Collections.sort(fieldNames);

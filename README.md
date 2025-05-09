@@ -18,34 +18,34 @@
 * User Service:
     * Manage user accounts and profiles within the system.
     * User registration and authentication (login, logout).
-    * User role and permission management.
+    * Manages user roles and permissions.
 * Product Service:
     * Manages information about the products offered in the system.
-    * Product catalog management (adding, updating, deleting products).
-    * Storing product details (name, description, price, SKU, category, etc.).
+    * Handles product catalog management (adding, updating, deleting products).
+    * Stores product details (name, description, price, SKU, category, etc.).
     * Interacts with the Inventory Service to check product availability.
-* Payment Service:
+* Payment Service (not available at the moment):
     * Handles all payment-related operations within the system.
-    * Processing payments (integrating with VNPay).
-    * Interact with the Order Service to update order statuses after payment.
+    * Processes payments (integrating with VNPay).
+    * Interacts with the Order Service to update order statuses after payment.
 * Order Service:
     * Manages the creation, processing, and tracking of customer orders.
-    * Creating new orders based on user selections.
-    * Managing order statuses.
-    * Calculating order totals.
-    * Managing order items and quantities.
-    * Interacting with the Inventory Service to reduce stock levels. (working...)
+    * Creates orders based on user selections.
+    * Manages order statuses.
+    * Calculates order totals.
+    * Manages order items and quantities.
+    * Interacts with the Inventory Service to reduce stock levels. (working...)
 * Notification Service:
     * Handles sending various types of notifications to users.
-    * Sending email notifications.
-    * Subscribe to events from other services
+    * Sends email notifications.
+    * Subscribes to events from other services
 * Inventory Service:
     * Manages the stock levels and availability of products.
-    * Tracking the quantity of each product in stock.
-    * Updating stock levels based on orders and returns.
-    * Providing information about product availability to other services (Product and Order services).
+    * Tracks the quantity of each product in stock.
+    * Updates stock levels based on orders and returns.
+    * Provides product availability information to other services (Product and Order Services).
 
-## Steps to Setup
+## Steps to set up
 
 1. **Clone the Repository**
 

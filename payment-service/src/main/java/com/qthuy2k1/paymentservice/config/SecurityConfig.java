@@ -13,8 +13,8 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/actuator/prometheus").permitAll()
-                                .anyRequest().authenticated())
+                        request
+                                .anyRequest().permitAll())
                 .build();
     }
 }

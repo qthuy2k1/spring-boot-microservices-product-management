@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class TransactionStatusDTO implements Serializable {
+public class TransactionStatusResponse implements Serializable {
     private String status;
     private String message;
     private String data;
