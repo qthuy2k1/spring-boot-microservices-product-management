@@ -1,5 +1,6 @@
 package com.qthuy2k1.orderservice.model;
 
+import com.qthuy2k1.orderservice.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,8 +22,10 @@ public class OrderModel {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
     private Integer userId;
-    private String status;
+    @Enumerated(EnumType.ORDINAL)
+    private OrderStatus status;
     private BigDecimal totalAmount;
+    private boolean isPaid;
     private Date createdAt;
     private Date updatedAt;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

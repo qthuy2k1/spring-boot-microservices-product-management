@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/orders/graphql", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**"
+            "/orders/graphiql", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**"
     };
 
     @Autowired

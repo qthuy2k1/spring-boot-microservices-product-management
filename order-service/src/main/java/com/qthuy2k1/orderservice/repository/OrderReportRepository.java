@@ -42,11 +42,11 @@ public class OrderReportRepository {
                     COALESCE(AVG(total_amount), 0) AS avgOrderValue,
                     COALESCE((SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'New Customer'), 0) AS newCustomers,
                     COALESCE((SELECT COUNT(*) FROM TotalCustomers tc WHERE tc.customer_type = 'Returning Customer'), 0) AS returningCustomers,
-                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PENDING'), 0) AS pending,
-                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'PROCESSING'), 0) AS processing,
-                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'SHIPPED'), 0) AS shipped,
-                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'DELIVERED'), 0) AS delivered,
-                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 'CANCELED'), 0) AS canceled
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 1), 0) AS pending,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 2), 0) AS processing,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 3), 0) AS shipped,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 4), 0) AS delivered,
+                    COALESCE((SELECT COUNT(*) FROM FilteredOrders WHERE status = 5), 0) AS canceled
                 FROM FilteredOrders
                 """);
         query.setParameter("startDate", startDate);

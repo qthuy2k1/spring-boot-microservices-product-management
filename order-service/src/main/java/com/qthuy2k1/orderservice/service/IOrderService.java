@@ -1,6 +1,8 @@
 package com.qthuy2k1.orderservice.service;
 
 import com.qthuy2k1.orderservice.dto.request.OrderRequest;
+import com.qthuy2k1.orderservice.dto.request.UpdatePaidOrderRequest;
+import com.qthuy2k1.orderservice.dto.request.UpdateStatusOrderRequest;
 import com.qthuy2k1.orderservice.dto.response.OrderGraphQLResponse;
 import com.qthuy2k1.orderservice.dto.response.OrderResponse;
 import com.qthuy2k1.orderservice.dto.response.ReportResponse;
@@ -16,7 +18,9 @@ public interface IOrderService {
 
     List<OrderGraphQLResponse> getAllOrdersGraphQL();
 
-    void updateOrder(Integer id, OrderRequest orderRequest);
+    void updateStatusOrder(Integer id, UpdateStatusOrderRequest orderRequest);
+
+    void handleKafkaPaidOrderUpdate(Integer id, UpdatePaidOrderRequest orderRequest);
 
     ReportResponse getReport(String startDate, String endDate);
 }

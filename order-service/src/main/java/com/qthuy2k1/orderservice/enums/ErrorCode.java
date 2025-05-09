@@ -24,7 +24,8 @@ public enum ErrorCode {
     FEIGN_ERROR(1010, "client feign error", HttpStatus.INTERNAL_SERVER_ERROR),
     START_DATE_NULL(1011, "start date must not be null", HttpStatus.BAD_REQUEST),
     END_DATE_NULL(1012, "end date must not be null", HttpStatus.NOT_FOUND),
-    SERVICE_UNAVAILABLE(1013, "Order service is currently unavailable. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
+    SERVICE_UNAVAILABLE(1013, "Order service is currently unavailable. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_STATUS_LABEL(1014, "Invalid status label", HttpStatus.BAD_REQUEST);
 
     int code;
     String message;

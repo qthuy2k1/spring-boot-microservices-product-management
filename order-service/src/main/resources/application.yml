@@ -18,6 +18,9 @@ spring:
   kafka:
     bootstrap-servers:
       - localhost:29092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -73,3 +76,9 @@ resilience4j:
       createOrder:
         maxRetryAttempts: 5
         waitDuration: 5s
+
+logging:
+  level:
+    org.hibernate:
+      SQL: DEBUG
+      orm.jdbc.bind: TRACE

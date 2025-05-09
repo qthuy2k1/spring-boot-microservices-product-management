@@ -1,10 +1,9 @@
 package com.qthuy2k1.orderservice.service;
 
-import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
-import com.qthuy2k1.orderservice.dto.request.OrderRequest;
-import com.qthuy2k1.orderservice.dto.request.ReduceInventoryRequest;
+import com.qthuy2k1.orderservice.dto.request.*;
 import com.qthuy2k1.orderservice.dto.response.*;
 import com.qthuy2k1.orderservice.enums.ErrorCode;
+import com.qthuy2k1.orderservice.enums.OrderStatus;
 import com.qthuy2k1.orderservice.event.OrderItemPlaced;
 import com.qthuy2k1.orderservice.event.OrderPlaced;
 import com.qthuy2k1.orderservice.exception.AppException;
@@ -29,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.graphql.client.HttpGraphQlClient;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -73,8 +73,12 @@ public class OrderService implements IOrderService {
     @Retry(name = "createOrder")
     @CircuitBreaker(name = "createOrder", fallbackMethod = "createOrderFallback")
     public OrderResponse createOrder(OrderRequest orderRequest) throws ExecutionException, InterruptedException {
-        if (orderRequest.getStatus() == null) {
-            orderRequest.setStatus("PENDING");
+        String statusLabel = orderRequest.getStatus();
+        if (statusLabel == null) {
+            orderRequest.setStatus(OrderStatus.PENDING.getLabel());
+        }
+        if (OrderStatus.isInvalidLabel(statusLabel)) {
+            throw new AppException(ErrorCode.INVALID_STATUS_LABEL);
         }
 
         Set<OrderItemRequest> orderItemsRequest = orderRequest.getOrderItem();
@@ -217,7 +221,7 @@ public class OrderService implements IOrderService {
             List<ReduceInventoryRequest> reduceInventoryRequests) {
         // send notification
         OrderPlaced orderPlaced = OrderPlaced.builder()
-                .status(orderSaved.getStatus())
+                .status(orderSaved.getStatus().getLabel())
                 .totalAmount(String.valueOf(orderSaved.getTotalAmount()))
                 .createdAt(LocalDateTime.now().toString())
                 .createdAt(LocalDateTime.now().toString())
@@ -331,12 +335,6 @@ public class OrderService implements IOrderService {
         return orderGraphQLResponsesList;
     }
 
-    public void updateOrder(Integer id, OrderRequest orderRequest) {
-        OrderModel order = orderRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        order.setStatus(orderRequest.getStatus());
-        orderRepository.save(order);
-    }
-
     public ReportResponse getReport(String startDate, String endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
@@ -381,6 +379,23 @@ public class OrderService implements IOrderService {
 
         reportResponse.setTopSellingProducts(productReportListResponse);
         return reportResponse;
+    }
+
+    public void updateStatusOrder(Integer id, UpdateStatusOrderRequest orderRequest) {
+        if (OrderStatus.isInvalidLabel(orderRequest.getStatus())) {
+            throw new AppException(ErrorCode.INVALID_STATUS_LABEL);
+        }
+        OrderModel order = orderRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        order.setStatus(OrderStatus.valueOf(orderRequest.getStatus()));
+        orderRepository.save(order);
+    }
+
+    @KafkaListener(topics = "update-order", groupId = "update-order-group")
+    public void handleKafkaPaidOrderUpdate(Integer id, UpdatePaidOrderRequest orderRequest) {
+        log.info("Updating paid order with ID: {}", id);
+        OrderModel order = orderRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        order.setPaid(true);
+        orderRepository.save(order);
     }
 
     private ReportResponse toReportResponse(ReportModel report) {
