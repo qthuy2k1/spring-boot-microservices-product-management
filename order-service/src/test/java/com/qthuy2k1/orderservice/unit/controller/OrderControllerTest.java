@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = OrderController.class)
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
-@WithMockUser(username = "usertest", password = "password", roles = "ADMIN")
+@WithMockUser(username = "usertest", roles = "admin")
 public class OrderControllerTest {
     @Autowired
     private MockMvc mockMvc;

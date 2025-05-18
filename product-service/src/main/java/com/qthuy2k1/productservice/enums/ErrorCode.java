@@ -17,7 +17,7 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(1003, "product not found", HttpStatus.NOT_FOUND),
     INVALID_ID(1004, "invalid id", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1005, "unauthenticated", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1006, "you do not have permission", HttpStatus.FORBIDDEN),
+    UNAUTHORIZED(1006, "access denied", HttpStatus.FORBIDDEN),
     FEIGN_ERROR(1007, "client feign error", HttpStatus.INTERNAL_SERVER_ERROR),
     PRODUCT_CATEGORY_NOT_FOUND(1008, "product category not found", HttpStatus.NOT_FOUND),
     PRODUCT_NAME_BLANK(1009, "product name shouldn't be blank", HttpStatus.BAD_REQUEST),

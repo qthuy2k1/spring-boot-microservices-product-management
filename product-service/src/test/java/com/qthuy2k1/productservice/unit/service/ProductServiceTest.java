@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.unit.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qthuy2k1.productservice.dto.request.InventoryRequest;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
@@ -52,7 +53,7 @@ public class ProductServiceTest {
     private KafkaTemplate<String, List<InventoryRequest>> inventoryRequestListKafkaTemplate;
 
     @Test
-    void createProduct() {
+    void createProduct() throws JsonProcessingException {
         // Given
         ProductRequest productRequest = ProductRequest.builder()
                 .name("Product 1")

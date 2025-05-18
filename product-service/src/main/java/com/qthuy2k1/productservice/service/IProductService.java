@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductGraphQLResponse;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface IProductService {
-    ProductResponse createProduct(ProductRequest productRequest);
+    ProductResponse createProduct(ProductRequest productRequest) throws JsonProcessingException;
 
     PaginatedResponse<ProductResponse> getAllProducts(int page, int size);
 

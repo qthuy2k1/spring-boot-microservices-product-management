@@ -1,4 +1,4 @@
-package com.inventoryservice.dto;
+package com.inventoryservice.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

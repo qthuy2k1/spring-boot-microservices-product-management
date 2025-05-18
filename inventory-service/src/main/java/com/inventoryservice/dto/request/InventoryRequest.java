@@ -1,4 +1,4 @@
-package com.inventoryservice.dto;
+package com.inventoryservice.dto.request;
 
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;

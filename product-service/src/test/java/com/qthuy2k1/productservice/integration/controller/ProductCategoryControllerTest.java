@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -27,10 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 @ExtendWith(SpringExtension.class)
 @DirtiesContext
-@WithMockUser(username = "usertest", roles = "ADMIN")
+//@WithMockUser(username = "usertest", roles = "admin")
 public class ProductCategoryControllerTest extends BaseControllerTest {
     @Test
     void createProductCategory() throws Exception {
+        String token = getAdminToken();
+
         ProductCategoryRequest productCategoryRequest = ProductCategoryRequest.builder()
                 .name("category 1")
                 .description("category description 1")
@@ -41,7 +42,7 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
                 .build();
 
         String createProductCategoryResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(productCategoryRequest))
                 .when().post("/product-categories")
@@ -60,7 +61,7 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
         assertThat(createProductCategoryApiResponse.getResult().getDescription()).isEqualTo(expectedProductCategoryResponse.getDescription());
 
         String getAllProductCategoriesResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/product-categories")
                 .then().statusCode(HttpStatus.OK.value())
@@ -81,8 +82,9 @@ public class ProductCategoryControllerTest extends BaseControllerTest {
 
     @Test
     void getAllCategories() throws Exception {
+        String token = getAdminToken();
         String getAllProductCategoriesResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/product-categories")
                 .then().statusCode(HttpStatus.OK.value())

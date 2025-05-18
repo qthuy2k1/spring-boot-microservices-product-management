@@ -16,7 +16,6 @@ spring:
         format_sql: "true"
     hibernate:
       ddl-auto: update
-    show-sql: "true"
   graphql:
     path: /products/graphql
     graphiql:
@@ -37,6 +36,13 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.trusted.packages: "*"
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:7070/realms/my-realm
 
 ## Eureka
 eureka:
@@ -47,11 +53,6 @@ eureka:
   instance:
     hostname: localhost
     prefer-ip-address: true
-
-management.endpoints.web.exposure.include: "*"
-management.endpoint.health.show-details: always
-management.health.circuitbreakers.enabled: true
-
 
 management:
   tracing:
@@ -64,6 +65,9 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
 
 # Resilience4j Properties
 resilience4j:
@@ -83,9 +87,3 @@ resilience4j:
   #Resilience4J Retry Properties
   retry.instances.user.max-attempts: 3
   retry.instances.user.wait-duration: 5
-
-
-logging:
-  level:
-    org.springframework.transaction: DEBUG
-    org.hibernate: DEBUG

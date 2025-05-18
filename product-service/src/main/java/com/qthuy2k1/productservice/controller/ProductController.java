@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ApiResponse;
 import com.qthuy2k1.productservice.dto.response.MessageResponse;
@@ -12,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,12 +30,28 @@ public class ProductController {
     private final IProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequest productRequest) {
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@RequestBody @Valid ProductRequest productRequest) throws JsonProcessingException {
+        logUserRoles();
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<ProductResponse>builder()
                         .result(productService.createProduct(productRequest)).build()
         );
+    }
+
+    public void logUserRoles() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            System.out.println("User: " + username);
+
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                System.out.println("Role: " + authority.getAuthority());
+            }
+        } else {
+            System.out.println("No authenticated user.");
+        }
     }
 
     @GetMapping
@@ -39,6 +59,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0", name = "page") int page,
             @RequestParam(defaultValue = "10", name = "size") int size
     ) {
+        logUserRoles();
         log.info("PAGE: {}", page);
         log.info("SIZE: {}", size);
         return ResponseEntity.ok().body(
@@ -49,7 +70,7 @@ public class ProductController {
     }
 
     @PutMapping("{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable("id") int id, @RequestBody @Valid ProductRequest productRequest) {
         return ResponseEntity.ok().body(
                 ApiResponse.<ProductResponse>builder()
@@ -59,7 +80,7 @@ public class ProductController {
     }
 
     @DeleteMapping("{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable("id") int id) {
         productService.deleteProductById(id);
         return ResponseEntity.ok().body(
@@ -95,7 +116,7 @@ public class ProductController {
     }
 
     @PostMapping("/upload")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<ApiResponse<String>> uploadProductList(@RequestParam("file") MultipartFile file) throws IOException {
         productService.batchInsertProduct(file);
         return ResponseEntity.ok().body(

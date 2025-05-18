@@ -27,15 +27,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Testcontainers
 public abstract class BaseServiceTest {
     static final int REDIS_PORT = 6379;
+    static final String POSTGRES_IMAGE = "postgres:16-alpine";
+    static final String REDIS_IMAGE = "redis:6.2-alpine";
+    static final String KAFKA_IMAGE = "confluentinc/cp-kafka:7.4.0";
+    @Container
+    static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(POSTGRES_IMAGE);
     @Container
     static final RedisContainer redisContainer =
-            new RedisContainer(DockerImageName.parse("redis:6.2-alpine")).withExposedPorts(REDIS_PORT);
+            new RedisContainer(DockerImageName.parse(REDIS_IMAGE)).withExposedPorts(REDIS_PORT);
     @Container
-    static final PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
-            "postgres:16-alpine"
-    );
-    @Container
-    static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"));
+    static final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse(KAFKA_IMAGE));
+    @Autowired
     ProductModel productSaved;
     @Autowired
     ProductRepository productRepository;

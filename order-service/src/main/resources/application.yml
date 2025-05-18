@@ -14,7 +14,6 @@ spring:
         format_sql: "true"
     hibernate:
       ddl-auto: update
-    show-sql: "true"
   kafka:
     bootstrap-servers:
       - localhost:29092
@@ -31,6 +30,11 @@ spring:
     graphiql:
       enabled: true
       path: /orders/graphiql
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:7070/realms/my-realm
 
 
 ## Eureka
@@ -77,8 +81,6 @@ resilience4j:
         maxRetryAttempts: 5
         waitDuration: 5s
 
-logging:
-  level:
-    org.hibernate:
-      SQL: DEBUG
-      orm.jdbc.bind: TRACE
+keycloak:
+  host: localhost
+  port: 7070

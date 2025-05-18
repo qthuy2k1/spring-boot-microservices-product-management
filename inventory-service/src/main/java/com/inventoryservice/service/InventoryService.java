@@ -1,9 +1,10 @@
 package com.inventoryservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inventoryservice.dto.InventoryRequest;
-import com.inventoryservice.dto.InventoryResponse;
-import com.inventoryservice.dto.ReduceInventoryRequest;
+import com.inventoryservice.dto.request.InventoryRequest;
+import com.inventoryservice.dto.request.ReduceInventoryRequest;
+import com.inventoryservice.dto.response.InventoryResponse;
 import com.inventoryservice.model.InventoryModel;
 import com.inventoryservice.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -34,19 +35,24 @@ public class InventoryService implements IInventoryService {
     }
 
     @KafkaListener(topics = "create-inventory", groupId = "inventory-group")
-    public void createInventoryKafka(LinkedHashMap<String, Object> rawInventoryRequest) {
-        log.info("receive message from kafka: create inventory");
-        InventoryRequest inventoryRequest = mapper.convertValue(rawInventoryRequest, InventoryRequest.class);
-        inventoryRepository.save(
-                InventoryModel.builder()
-                        .quantity(inventoryRequest.getQuantity())
-                        .productId(inventoryRequest.getProductId())
-                        .build()
-        );
+    public void createInventoryKafka(String request) throws JsonProcessingException {
+        InventoryRequest inventoryRequest = mapper.readValue(request, InventoryRequest.class);
+        log.info("Received InventoryRequest from Kafka: {}", inventoryRequest);
+        try {
+            inventoryRepository.save(
+                    InventoryModel.builder()
+                            .quantity(inventoryRequest.getQuantity())
+                            .productId(inventoryRequest.getProductId())
+                            .build()
+            );
+            log.info("Inventory created for product ID: {}", inventoryRequest.getProductId());
+        } catch (Exception e) {
+            log.error("Failed to process inventory request: {}", inventoryRequest, e);
+        }
     }
 
     @KafkaListener(topics = "create-inventory-list", groupId = "inventory-list-group")
-    public void createInventoryListKafka(List<LinkedHashMap<String, Object>> rawInventoryListRequest) {
+    public void createInventoryListKafka(List<Map<String, Object>> rawInventoryListRequest) {
         log.info("receive message from kafka: create inventory list");
         List<InventoryRequest> inventoryRequests = rawInventoryListRequest.stream()
                 .map(map -> mapper.convertValue(map, InventoryRequest.class))
@@ -86,7 +92,7 @@ public class InventoryService implements IInventoryService {
     }
 
     @KafkaListener(topics = "reduce-product-stock", groupId = "reduce-product-stock-group")
-    public void reduceProductStock(List<LinkedHashMap<String, Object>> rawReduceProductStockListRequest) {
+    public void reduceProductStock(List<Map<String, Object>> rawReduceProductStockListRequest) {
         log.info("REDUCE PRODUCT STOCK");
         List<ReduceInventoryRequest> reduceRequests = rawReduceProductStockListRequest.stream()
                 .map(map -> mapper.convertValue(map, ReduceInventoryRequest.class))

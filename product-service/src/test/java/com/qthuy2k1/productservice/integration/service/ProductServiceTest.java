@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.integration.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.PaginatedResponse;
 import com.qthuy2k1.productservice.dto.response.ProductResponse;
@@ -22,7 +23,7 @@ public class ProductServiceTest extends BaseServiceTest {
     int defaultSize = 10;
 
     @Test
-    void create_And_GetAll_Product() {
+    void create_And_GetAll_Product() throws JsonProcessingException {
         // Given
         ProductRequest productRequest1 = ProductRequest.builder()
                 .name("Product 1")

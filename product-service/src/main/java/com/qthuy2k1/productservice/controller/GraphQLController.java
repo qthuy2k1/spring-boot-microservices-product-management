@@ -1,5 +1,6 @@
 package com.qthuy2k1.productservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qthuy2k1.productservice.dto.request.ProductRequest;
 import com.qthuy2k1.productservice.dto.response.ProductGraphQLResponse;
 import com.qthuy2k1.productservice.enums.ErrorCode;
@@ -31,7 +32,7 @@ public class GraphQLController {
     }
 
     @MutationMapping
-    public String createProduct(@Argument("input") ProductRequest productRequest) {
+    public String createProduct(@Argument("input") ProductRequest productRequest) throws JsonProcessingException {
         productService.createProduct(productRequest);
         return "Success";
     }

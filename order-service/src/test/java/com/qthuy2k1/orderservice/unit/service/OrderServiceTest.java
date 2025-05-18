@@ -3,7 +3,9 @@ package com.qthuy2k1.orderservice.unit.service;
 import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
 import com.qthuy2k1.orderservice.dto.request.OrderRequest;
 import com.qthuy2k1.orderservice.dto.request.ReduceInventoryRequest;
+import com.qthuy2k1.orderservice.dto.request.UpdateStatusOrderRequest;
 import com.qthuy2k1.orderservice.dto.response.*;
+import com.qthuy2k1.orderservice.enums.OrderStatus;
 import com.qthuy2k1.orderservice.event.OrderPlaced;
 import com.qthuy2k1.orderservice.exception.AppException;
 import com.qthuy2k1.orderservice.mapper.OrderItemMapper;
@@ -17,37 +19,40 @@ import com.qthuy2k1.orderservice.repository.OrderReportRepository;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
-import com.qthuy2k1.orderservice.repository.feign.UserClient;
 import com.qthuy2k1.orderservice.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.http.HttpHeaders;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@WithMockUser(username = "admin@gmail.com", roles = "ADMIN")
+@WithMockUser(username = "admin@gmail.com", roles = {"admin"})
 public class OrderServiceTest {
+    UUID userId = UUID.randomUUID();
+    @Mock
+    WebClient.ResponseSpec responseSpec;
     @Mock
     private OrderMapper orderMapper;
     @Mock
@@ -66,13 +71,17 @@ public class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
     @Mock
-    private UserClient userClient;
-    @Mock
     private ProductClient productClient;
     @Mock
     private InventoryClient inventoryClient;
     @Mock
     private OrderReportRepository orderReportRepository;
+    @Mock
+    private WebClient userClient;
+    @Mock
+    private WebClient.RequestHeadersUriSpec uriSpec;
+    @Mock
+    private WebClient.RequestBodyUriSpec headerSpec;
 
     @BeforeEach
     void setUp() {
@@ -83,12 +92,20 @@ public class OrderServiceTest {
                 orderPlacedKafkaTemplate,
                 reduceInventoryKafkaTemplate,
                 webClientBuilder,
-                userClient,
                 productClient,
                 inventoryClient,
                 orderMapper,
-                orderItemMapper
+                orderItemMapper,
+                userClient
         );
+
+        // set request context
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        // Optionally set headers if your code needs them
+        request.addHeader("Authorization", "Bearer dummy-token-for-tests");
+
+        ServletRequestAttributes attributes = new ServletRequestAttributes(request);
+        RequestContextHolder.setRequestAttributes(attributes);
     }
 
     @Test
@@ -109,22 +126,24 @@ public class OrderServiceTest {
         product.setDescription("Test Product Description");
 
         UserResponse user = new UserResponse();
-        user.setId(1);
+        user.setId(userId);
 
         ApiResponse<List<ProductResponse>> productApiResponse = new ApiResponse<>();
         productApiResponse.setResult(List.of(product));
 
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId("1")).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(2, 1)).thenReturn(new InventoryResponse(true));
 
         OrderModel orderModel = new OrderModel();
         orderModel.setId(1);
-        orderModel.setStatus("PENDING");
-        orderModel.setUserId(1);
+        orderModel.setStatus(OrderStatus.PENDING);
+        orderModel.setUserId(userId);
 
         OrderItemModel itemModel = new OrderItemModel();
         itemModel.setProductId(1);
@@ -135,20 +154,11 @@ public class OrderServiceTest {
         mockResponse.setId(1);
         mockResponse.setStatus("PENDING");
         mockResponse.setTotalAmount(BigDecimal.valueOf(20.0));
-        mockResponse.setUserId(1);
+        mockResponse.setUserId(userId.toString());
 
         when(orderMapper.toOder(any(OrderRequest.class))).thenReturn(orderModel);
         when(orderRepository.save(any())).thenReturn(orderModel);
         when(orderMapper.toOrderResponse(any())).thenReturn(mockResponse);
-
-        // Create a mock Authentication object
-        Authentication authentication = Mockito.mock(Authentication.class);
-        Mockito.when(authentication.getName()).thenReturn("admin@gmail.com");
-
-        // Set the Authentication into the SecurityContext
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
 
         OrderResponse result = orderService.createOrder(orderRequest);
 
@@ -157,10 +167,9 @@ public class OrderServiceTest {
         assertEquals(1, result.getId());
         assertEquals("PENDING", result.getStatus());
         assertEquals(BigDecimal.valueOf(20.0), result.getTotalAmount());
-        assertEquals(1, result.getUserId());
+        assertEquals(userId.toString(), result.getUserId());
 
         verify(productClient).getProductsByListId("1");
-        verify(userClient).getUserByEmail("admin@gmail.com");
         verify(inventoryClient).isInStock(2, 1);
         verify(orderRepository).save(any(OrderModel.class));
         verify(orderMapper).toOrderResponse(any());
@@ -170,26 +179,26 @@ public class OrderServiceTest {
     void updateOrder_shouldUpdateOrderStatus_whenOrderExists() {
         // Given
         Integer orderId = 1;
-        OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setStatus("COMPLETED");
+        UpdateStatusOrderRequest orderRequest = new UpdateStatusOrderRequest();
+        orderRequest.setStatus(OrderStatus.DELIVERED.getLabel());
 
         OrderModel existingOrder = new OrderModel();
         existingOrder.setId(orderId);
-        existingOrder.setStatus("PENDING");
+        existingOrder.setStatus(OrderStatus.PENDING);
         existingOrder.setTotalAmount(BigDecimal.valueOf(100));
-        existingOrder.setUserId(1);
+        existingOrder.setUserId(userId);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
         when(orderRepository.save(any(OrderModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        orderService.updateOrder(orderId, orderRequest);
+        orderService.updateStatusOrder(orderId, orderRequest);
 
         // Then
         assertNotNull(existingOrder);
-        assertEquals("COMPLETED", existingOrder.getStatus());
+        assertEquals(OrderStatus.DELIVERED, existingOrder.getStatus());
         assertEquals(orderId, existingOrder.getId());
-        assertEquals(1, existingOrder.getUserId());
+        assertEquals(userId, existingOrder.getUserId());
         assertEquals(BigDecimal.valueOf(100), existingOrder.getTotalAmount());
         verify(orderRepository).findById(orderId);
         verify(orderRepository).save(existingOrder);
@@ -199,13 +208,13 @@ public class OrderServiceTest {
     void updateOrder_shouldThrowException_whenOrderNotFound() {
         // Given
         Integer orderId = 99;
-        OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setStatus("CANCELLED");
+        UpdateStatusOrderRequest orderRequest = new UpdateStatusOrderRequest();
+        orderRequest.setStatus(OrderStatus.CANCELED.getLabel());
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         // Then
-        assertThrows(AppException.class, () -> orderService.updateOrder(orderId, orderRequest));
+        assertThrows(AppException.class, () -> orderService.updateStatusOrder(orderId, orderRequest));
         verify(orderRepository).findById(orderId);
         verify(orderRepository, never()).save(any());
     }

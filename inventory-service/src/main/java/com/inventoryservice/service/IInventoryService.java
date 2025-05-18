@@ -1,7 +1,7 @@
 package com.inventoryservice.service;
 
-import com.inventoryservice.dto.InventoryRequest;
-import com.inventoryservice.dto.InventoryResponse;
+import com.inventoryservice.dto.request.InventoryRequest;
+import com.inventoryservice.dto.response.InventoryResponse;
 
 public interface IInventoryService {
     void createInventory(InventoryRequest inventoryRequest);

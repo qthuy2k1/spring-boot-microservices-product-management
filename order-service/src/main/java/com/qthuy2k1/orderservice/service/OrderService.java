@@ -18,7 +18,6 @@ import com.qthuy2k1.orderservice.repository.OrderReportRepository;
 import com.qthuy2k1.orderservice.repository.OrderRepository;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
-import com.qthuy2k1.orderservice.repository.feign.UserClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.transaction.Transactional;
@@ -28,13 +27,12 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.graphql.client.HttpGraphQlClient;
+import org.springframework.http.HttpHeaders;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -61,13 +59,13 @@ public class OrderService implements IOrderService {
     KafkaTemplate<String, List<ReduceInventoryRequest>> reduceInventoryKafkaTemplate;
     @LoadBalanced
     WebClient.Builder webClientBuilder;
-    UserClient userClient;
     ProductClient productClient;
     InventoryClient inventoryClient;
     OrderMapper orderMapper;
     OrderItemMapper orderItemMapper;
-    private final String PRICE_FORMAT = "#.00";
-    private final String PERIOD_DAYS = " day(s)";
+    String PRICE_FORMAT = "#.00";
+    String PERIOD_DAYS = " day(s)";
+    WebClient userClient;
 
     @Transactional
     @Retry(name = "createOrder")
@@ -77,22 +75,22 @@ public class OrderService implements IOrderService {
         if (statusLabel == null) {
             orderRequest.setStatus(OrderStatus.PENDING.getLabel());
         }
-        if (OrderStatus.isInvalidLabel(statusLabel)) {
-            throw new AppException(ErrorCode.INVALID_STATUS_LABEL);
-        }
 
         Set<OrderItemRequest> orderItemsRequest = orderRequest.getOrderItem();
 
-        // list of product id
+        // list of product ids, separated by commas (e.g. 1,2,3)
         String ids = orderItemsRequest.stream()
                 .map(orderItem -> String.valueOf(orderItem.getProductId()))
                 .collect(Collectors.joining(","));
 
-        // for jwt token in asynchronous
+        // for authentication(jwt token) in asynchronous calls
         ServletRequestAttributes requestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
 
-        // async calls
+        // asynchronous calls
         CompletableFuture<Map<Integer, ProductResponse>> productFuture = fetchProductMapAsync(requestAttributes, ids);
         CompletableFuture<UserResponse> userFuture = fetchUserAsync(requestAttributes);
 
@@ -185,7 +183,7 @@ public class OrderService implements IOrderService {
         return orderItemModels;
     }
 
-    private CompletableFuture<Map<Integer, ProductResponse>> fetchProductMapAsync(RequestAttributes requestAttributes, String ids) {
+    private CompletableFuture<Map<Integer, ProductResponse>> fetchProductMapAsync(ServletRequestAttributes requestAttributes, String ids) {
         return CompletableFuture.supplyAsync(() -> {
             RequestContextHolder.setRequestAttributes(requestAttributes);
             ApiResponse<List<ProductResponse>> productList = productClient.getProductsByListId(ids);
@@ -199,19 +197,11 @@ public class OrderService implements IOrderService {
         });
     }
 
-    private CompletableFuture<UserResponse> fetchUserAsync(RequestAttributes requestAttributes) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (email == null || email.isEmpty()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
+    private CompletableFuture<UserResponse> fetchUserAsync(ServletRequestAttributes requestAttributes) {
         return CompletableFuture.supplyAsync(() -> {
-
             RequestContextHolder.setRequestAttributes(requestAttributes);
-            ApiResponse<UserResponse> user = userClient.getUserByEmail(email);
-            if (user == null || user.getResult() == null) {
-                throw new AppException(ErrorCode.USER_NOT_FOUND);
-            }
-            return user.getResult();
+            return Optional.ofNullable(getUserInfo(requestAttributes))
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         });
     }
 
@@ -314,20 +304,17 @@ public class OrderService implements IOrderService {
             }
 
             // request to user service to retrieve the user response
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            if (email == null || email.isEmpty()) {
+            ServletRequestAttributes requestAttributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (requestAttributes == null) {
                 throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
-            ApiResponse<UserResponse> user = userClient.getUserByEmail(email);
-
-            // throw exception if user not found
-            if (user == null || user.getResult() == null) {
-                throw new AppException(ErrorCode.USER_NOT_FOUND);
-            }
+            UserResponse user = Optional.ofNullable(getUserInfo(servletRequestAttributes))
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
             // convert order item list to order item set
             OrderGraphQLResponse orderGraphQLResponse = orderMapper.toOrderGraphQLResponse(orderModel);
-            orderGraphQLResponse.setUser(user.getResult());
+            orderGraphQLResponse.setUser(user);
             orderGraphQLResponse.setOrderItems(orderItemGraphQLResponsesList);
             orderGraphQLResponsesList.add(orderGraphQLResponse);
         }
@@ -382,11 +369,8 @@ public class OrderService implements IOrderService {
     }
 
     public void updateStatusOrder(Integer id, UpdateStatusOrderRequest orderRequest) {
-        if (OrderStatus.isInvalidLabel(orderRequest.getStatus())) {
-            throw new AppException(ErrorCode.INVALID_STATUS_LABEL);
-        }
         OrderModel order = orderRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        order.setStatus(OrderStatus.valueOf(orderRequest.getStatus()));
+        order.setStatus(OrderStatus.fromLabel(orderRequest.getStatus()));
         orderRepository.save(order);
     }
 
@@ -411,5 +395,18 @@ public class OrderService implements IOrderService {
                 .delivered(report.getDelivered())
                 .canceled(report.getCanceled())
                 .build();
+    }
+
+    public UserResponse getUserInfo(ServletRequestAttributes requestAttributes) {
+        String authHeader = requestAttributes.getRequest().getHeader("Authorization");
+        if (!StringUtils.hasText(authHeader)) {
+            return null;
+        }
+        return userClient.get()
+                .uri("/realms/my-realm/protocol/openid-connect/userinfo")
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
+                .retrieve()
+                .bodyToMono(UserResponse.class)
+                .block();
     }
 }

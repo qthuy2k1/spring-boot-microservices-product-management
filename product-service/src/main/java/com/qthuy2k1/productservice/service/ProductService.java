@@ -1,5 +1,7 @@
 package com.qthuy2k1.productservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -45,11 +47,12 @@ import java.util.stream.Collectors;
 public class ProductService implements IProductService {
     ProductRepository productRepository;
     ProductCategoryRepository productCategoryRepository;
-    KafkaTemplate<String, InventoryRequest> inventoryRequestKafkaTemplate;
+    KafkaTemplate<String, String> inventoryRequestKafkaTemplate;
     KafkaTemplate<String, List<InventoryRequest>> inventoryRequestListKafkaTemplate;
     ProductMapper productMapper;
+    ObjectMapper objectMapper = new ObjectMapper();
 
-    public ProductResponse createProduct(ProductRequest productRequest) {
+    public ProductResponse createProduct(ProductRequest productRequest) throws JsonProcessingException {
         ProductModel productModel = productMapper.toProduct(productRequest);
 
         // Get the product category
@@ -66,7 +69,7 @@ public class ProductService implements IProductService {
                 .productId(productModel.getId())
                 .build();
 
-        inventoryRequestKafkaTemplate.send("create-inventory", inventoryRequest);
+        inventoryRequestKafkaTemplate.send("create-inventory", objectMapper.writeValueAsString(inventoryRequest));
 
         return productMapper.toProductResponse(productModel);
     }

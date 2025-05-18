@@ -20,7 +20,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -40,7 +39,6 @@ import static org.hamcrest.core.IsEqual.equalTo;
 )
 @ExtendWith(SpringExtension.class)
 @DirtiesContext
-@WithMockUser(username = "usertest", roles = "ADMIN")
 public class ProductControllerTest extends BaseControllerTest {
     private final ProductCategoryMapper productCategoryMapper = Mappers.getMapper(ProductCategoryMapper.class);
     private final DecimalFormat decimalFormatPrice = new DecimalFormat("#.00");
@@ -51,6 +49,7 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void createProduct() throws Exception {
+        String token = getAdminToken();
         ProductRequest productRequest = ProductRequest.builder()
                 .name("iphone 13")
                 .description("description of iphone 13")
@@ -68,7 +67,7 @@ public class ProductControllerTest extends BaseControllerTest {
                 .build();
 
         String createProductResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(productRequest))
                 .when().post("/products")
@@ -93,7 +92,7 @@ public class ProductControllerTest extends BaseControllerTest {
         assertThat(createProductApiResponse.getResult().getCategory()).isEqualTo(expectedProductResponse.getCategory());
 
         String getAllProductsResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/products")
                 .then().statusCode(HttpStatus.OK.value())
@@ -119,6 +118,7 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void createProduct_ExceptionThrown_InvalidRequest() throws Exception {
+        String token = getAdminToken();
         ProductRequest productRequest = ProductRequest.builder()
                 .name("abc")
                 .description("  ") // only whitespaces
@@ -134,7 +134,7 @@ public class ProductControllerTest extends BaseControllerTest {
                 .build();
 
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(productRequest))
                 .when().post("/products")
@@ -144,8 +144,9 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void getAllProducts() throws Exception {
+        String token = getAdminToken();
         String getAllProductsResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/products")
                 .then().statusCode(HttpStatus.OK.value())
@@ -183,20 +184,21 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void deleteProductById() throws Exception {
+        String token = getAdminToken();
         int id = productSaved1.getId();
 
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                 .result(MessageResponse.SUCCESS)
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().delete("/products/" + id)
                 .then().statusCode(HttpStatus.OK.value())
                 .body(equalTo(objectMapper.writeValueAsString(apiResponse)));
 
         String getAllProductsResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/products")
                 .then().statusCode(HttpStatus.OK.value())
@@ -223,13 +225,14 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void deleteProductById_ExceptionThrown_ProductNotFound() throws Exception {
+        String token = getAdminToken();
         int id = productSaved2.getId() + 1;
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(ErrorCode.PRODUCT_NOT_FOUND.getCode())
                 .message(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().delete("/products/" + id)
                 .then().statusCode(ErrorCode.PRODUCT_NOT_FOUND.getStatusCode().value())
@@ -238,6 +241,7 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void updateProductById() throws Exception {
+        String token = getAdminToken();
         int id = productSaved1.getId();
         ProductRequest productRequest = ProductRequest.builder()
                 .name("Product 1000")
@@ -259,7 +263,7 @@ public class ProductControllerTest extends BaseControllerTest {
                 .result(expectProductResponse)
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(productRequest))
                 .when().put("/products/" + id)
@@ -269,6 +273,7 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void updateProductById_ExceptionThrown_InvalidRequest() throws Exception {
+        String token = getAdminToken();
         int id = 1;
         ProductRequest productRequest = ProductRequest.builder()
                 .name("abc")
@@ -284,7 +289,7 @@ public class ProductControllerTest extends BaseControllerTest {
                 .message(ErrorCode.PRODUCT_DESCRIPTION_BLANK.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(productRequest))
                 .when().put("/products/" + id)
@@ -294,9 +299,10 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void getProductById() throws Exception {
+        String token = getAdminToken();
         int id = productSaved1.getId();
         String getProductResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/products/" + id)
                 .then().statusCode(HttpStatus.OK.value())
@@ -323,6 +329,7 @@ public class ProductControllerTest extends BaseControllerTest {
 
     @Test
     void getUserById_ExceptionThrown_UserNotFound() throws Exception {
+        String token = getAdminToken();
         int id = 1;
 
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
@@ -330,7 +337,7 @@ public class ProductControllerTest extends BaseControllerTest {
                 .message(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .when().get("/products/" + id)
                 .then().statusCode(ErrorCode.PRODUCT_NOT_FOUND.getStatusCode().value())

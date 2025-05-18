@@ -1,5 +1,6 @@
 package com.qthuy2k1.orderservice.enums;
 
+import com.qthuy2k1.orderservice.exception.AppException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -21,12 +22,12 @@ public enum OrderStatus {
 
     private final String label;
 
-    public static boolean isInvalidLabel(String inputLabel) {
+    public static OrderStatus fromLabel(String inputLabel) {
         for (OrderStatus status : OrderStatus.values()) {
             if (status.getLabel().equalsIgnoreCase(inputLabel)) {
-                return false;
+                return status;
             }
         }
-        return true;
+        throw new AppException(ErrorCode.INVALID_STATUS_LABEL);
     }
 }

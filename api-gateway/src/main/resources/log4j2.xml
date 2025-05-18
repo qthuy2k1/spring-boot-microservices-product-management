@@ -26,5 +26,6 @@
         </Root>
 
         <Logger name="com.qthuy2k1.apigateway" level="DEBUG"/>
+        <!--        <Logger name="org.springframework.security" level="DEBUG"/>-->
     </Loggers>
 </Configuration>

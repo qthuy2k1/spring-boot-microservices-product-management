@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -21,7 +22,7 @@ public class OrderModel {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
-    private Integer userId;
+    private UUID userId;
     @Enumerated(EnumType.ORDINAL)
     private OrderStatus status;
     private BigDecimal totalAmount;

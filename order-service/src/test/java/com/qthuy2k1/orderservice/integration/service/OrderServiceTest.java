@@ -6,12 +6,15 @@ import com.qthuy2k1.orderservice.dto.response.*;
 import com.qthuy2k1.orderservice.enums.ErrorCode;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
-import com.qthuy2k1.orderservice.repository.feign.UserClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,20 +25,25 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(properties = "spring.profiles.active=test")
-@DirtiesContext
-@WithMockUser(username = "test", roles = "ADMIN")
+@DirtiesContext()
+@WithMockUser(username = "test", roles = "admin")
 public class OrderServiceTest extends BaseServiceTest {
     @MockBean
     InventoryClient inventoryClient;
     @MockBean
     ProductClient productClient;
     @MockBean
-    UserClient userClient;
+    WebClient userClient;
+    @Mock
+    WebClient.ResponseSpec responseSpec;
+    @Mock
+    private WebClient.RequestHeadersUriSpec uriSpec;
+    @Mock
+    private WebClient.RequestBodyUriSpec headerSpec;
 
     @Test
     void createOrder() throws ExecutionException, InterruptedException {
@@ -68,15 +76,18 @@ public class OrderServiceTest extends BaseServiceTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         OrderResponse createdOrder = orderService.createOrder(orderRequest);
@@ -93,7 +104,7 @@ public class OrderServiceTest extends BaseServiceTest {
                 .isEqualTo("PENDING");
         assertThat(createdOrder.getUserId())
                 .as("Check that the user ID of the created order is correct")
-                .isEqualTo(1);
+                .isEqualTo(userId.toString());
         assertThat(createdOrder.getOrderItems().size())
                 .as("Check that the number of order items is correct")
                 .isEqualTo(2);
@@ -163,7 +174,7 @@ public class OrderServiceTest extends BaseServiceTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
@@ -171,7 +182,6 @@ public class OrderServiceTest extends BaseServiceTest {
         userApiResponse.setResult(user);
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         assertThatThrownBy(() -> orderService.createOrder(orderRequest)).hasMessageContaining(ErrorCode.PRODUCT_NOT_FOUND.getMessage());
@@ -207,11 +217,13 @@ public class OrderServiceTest extends BaseServiceTest {
                 .result(List.of(product1, product2))
                 .build();
 
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(null);
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.empty());
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         assertThatThrownBy(() -> orderService.createOrder(orderRequest)).hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
@@ -248,15 +260,18 @@ public class OrderServiceTest extends BaseServiceTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(false));
 
         assertThatThrownBy(() -> orderService.createOrder(orderRequest)).hasMessageContaining(ErrorCode.PRODUCT_OUT_OF_STOCK.getMessage());

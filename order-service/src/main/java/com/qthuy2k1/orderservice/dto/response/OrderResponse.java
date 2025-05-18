@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class OrderResponse {
     private Integer id;
-    private Integer userId;
+    private String userId;
     private String status;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;

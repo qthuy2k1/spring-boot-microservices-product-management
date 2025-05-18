@@ -6,6 +6,8 @@ import com.qthuy2k1.orderservice.dto.request.UpdateStatusOrderRequest;
 import com.qthuy2k1.orderservice.dto.response.OrderGraphQLResponse;
 import com.qthuy2k1.orderservice.dto.response.OrderResponse;
 import com.qthuy2k1.orderservice.dto.response.ReportResponse;
+import com.qthuy2k1.orderservice.dto.response.UserResponse;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -23,4 +25,6 @@ public interface IOrderService {
     void handleKafkaPaidOrderUpdate(Integer id, UpdatePaidOrderRequest orderRequest);
 
     ReportResponse getReport(String startDate, String endDate);
+
+    UserResponse getUserInfo(ServletRequestAttributes requestAttributes);
 }

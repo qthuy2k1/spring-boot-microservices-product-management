@@ -5,22 +5,27 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qthuy2k1.orderservice.OrderApplication;
 import com.qthuy2k1.orderservice.dto.request.OrderItemRequest;
 import com.qthuy2k1.orderservice.dto.request.OrderRequest;
+import com.qthuy2k1.orderservice.dto.request.UpdateStatusOrderRequest;
 import com.qthuy2k1.orderservice.dto.response.*;
 import com.qthuy2k1.orderservice.enums.ErrorCode;
+import com.qthuy2k1.orderservice.enums.OrderStatus;
 import com.qthuy2k1.orderservice.repository.feign.InventoryClient;
 import com.qthuy2k1.orderservice.repository.feign.ProductClient;
-import com.qthuy2k1.orderservice.repository.feign.UserClient;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -29,8 +34,7 @@ import java.util.Set;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(
@@ -46,10 +50,17 @@ public class OrderControllerTest extends BaseControllerTest {
     @MockBean
     ProductClient productClient;
     @MockBean
-    UserClient userClient;
+    WebClient userClient;
+    @Mock
+    WebClient.ResponseSpec responseSpec;
+    @Mock
+    private WebClient.RequestHeadersUriSpec uriSpec;
+    @Mock
+    private WebClient.RequestBodyUriSpec headerSpec;
 
     @Test
     void createOrder() throws Exception {
+        String token = getAdminToken();
         OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
                 .price(BigDecimal.valueOf(1000))
                 .productId(1)
@@ -68,7 +79,7 @@ public class OrderControllerTest extends BaseControllerTest {
         OrderResponse expectedOrderResponse = OrderResponse.builder()
                 .status("PENDING")
                 .totalAmount(BigDecimal.valueOf(5000))
-                .userId(1)
+                .userId(userId.toString())
                 .build();
 
         ProductResponse product1 = new ProductResponse();
@@ -86,19 +97,22 @@ public class OrderControllerTest extends BaseControllerTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         String createOrderResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().post("/orders")
@@ -157,6 +171,7 @@ public class OrderControllerTest extends BaseControllerTest {
 
     @Test
     void createOrder_ServiceUnavailable() throws Exception {
+        String token = getAdminToken();
         OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
                 .price(BigDecimal.valueOf(1000))
                 .productId(1)
@@ -177,7 +192,7 @@ public class OrderControllerTest extends BaseControllerTest {
                 .build();
 
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().post("/orders")
@@ -188,6 +203,7 @@ public class OrderControllerTest extends BaseControllerTest {
 
     @Test
     void createOrder_ProductNotFound() throws Exception {
+        String token = getAdminToken();
         OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
                 .price(BigDecimal.valueOf(1000))
                 .productId(1)
@@ -208,15 +224,18 @@ public class OrderControllerTest extends BaseControllerTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         ApiResponse<OrderResponse> orderApiResponse = ApiResponse.<OrderResponse>builder()
@@ -225,7 +244,7 @@ public class OrderControllerTest extends BaseControllerTest {
                 .build();
 
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().post("/orders")
@@ -235,6 +254,7 @@ public class OrderControllerTest extends BaseControllerTest {
 
     @Test
     void createOrder_UserNotFound() throws Exception {
+        String token = getAdminToken();
         OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
                 .price(BigDecimal.valueOf(1000))
                 .productId(1)
@@ -264,11 +284,13 @@ public class OrderControllerTest extends BaseControllerTest {
                 .result(List.of(product1, product2))
                 .build();
 
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(null);
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.empty());
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(true));
 
         ApiResponse<OrderResponse> orderApiResponse = ApiResponse.<OrderResponse>builder()
@@ -276,7 +298,7 @@ public class OrderControllerTest extends BaseControllerTest {
                 .message(ErrorCode.USER_NOT_FOUND.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().post("/orders")
@@ -286,6 +308,7 @@ public class OrderControllerTest extends BaseControllerTest {
 
     @Test
     void createOrder_ProductOutOfStock() throws Exception {
+        String token = getAdminToken();
         OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
                 .price(BigDecimal.valueOf(1000))
                 .productId(1)
@@ -316,15 +339,18 @@ public class OrderControllerTest extends BaseControllerTest {
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(1)
+                .id(userId)
                 .email("test@example.com")
                 .name("Test Name")
                 .build();
-        ApiResponse<UserResponse> userApiResponse = new ApiResponse<>();
-        userApiResponse.setResult(user);
+
+        when(userClient.get()).thenReturn(uriSpec);
+        when(uriSpec.uri(anyString())).thenReturn(headerSpec);
+        when(headerSpec.header(eq(HttpHeaders.AUTHORIZATION), anyString())).thenReturn(headerSpec);
+        when(headerSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(UserResponse.class)).thenReturn(Mono.just(user));
 
         when(productClient.getProductsByListId(any())).thenReturn(productApiResponse);
-        when(userClient.getUserByEmail(anyString())).thenReturn(userApiResponse);
         when(inventoryClient.isInStock(any(), any())).thenReturn(new InventoryResponse(false));
 
         ApiResponse<OrderResponse> orderApiResponse = ApiResponse.<OrderResponse>builder()
@@ -332,7 +358,7 @@ public class OrderControllerTest extends BaseControllerTest {
                 .message(ErrorCode.PRODUCT_OUT_OF_STOCK.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().post("/orders")
@@ -342,6 +368,7 @@ public class OrderControllerTest extends BaseControllerTest {
 
     @Test
     void getReport() throws Exception {
+        String token = getAdminToken();
         String startDate = LocalDateTime.now().minusMonths(1).toString();
         String endDate = LocalDateTime.now().plusMonths(1).toString();
 
@@ -376,7 +403,7 @@ public class OrderControllerTest extends BaseControllerTest {
         when(productClient.getProductsByListId(any())).thenReturn(expectedProductApiResponse);
 
         String getReportResponseBody = given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .queryParam("startDate", startDate)
                 .queryParam("endDate", endDate)
@@ -456,25 +483,15 @@ public class OrderControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void updateOrder() throws JsonProcessingException {
+    void updateOrder() throws JsonProcessingException, URISyntaxException {
+        String token = getAdminToken();
         int id = savedOrder.getId();
-        OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
-                .price(BigDecimal.valueOf(1000))
-                .productId(1)
-                .quantity(1)
-                .build();
-
-        OrderItemRequest orderItemRequest2 = OrderItemRequest.builder()
-                .price(BigDecimal.valueOf(2000))
-                .productId(2)
-                .quantity(2)
-                .build();
-        OrderRequest orderRequest = OrderRequest.builder()
-                .orderItem(Set.of(orderItemRequest1, orderItemRequest2))
+        UpdateStatusOrderRequest orderRequest = UpdateStatusOrderRequest.builder()
+                .status(OrderStatus.DELIVERED.getLabel())
                 .build();
 
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().put("/orders/" + id)
@@ -483,21 +500,11 @@ public class OrderControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void updateOrder_OrderNotFound() throws JsonProcessingException {
+    void updateOrder_OrderNotFound() throws JsonProcessingException, URISyntaxException {
+        String token = getAdminToken();
         int id = savedOrder.getId() + 1;
-        OrderItemRequest orderItemRequest1 = OrderItemRequest.builder()
-                .price(BigDecimal.valueOf(1000))
-                .productId(1)
-                .quantity(1)
-                .build();
-
-        OrderItemRequest orderItemRequest2 = OrderItemRequest.builder()
-                .price(BigDecimal.valueOf(2000))
-                .productId(2)
-                .quantity(2)
-                .build();
         OrderRequest orderRequest = OrderRequest.builder()
-                .orderItem(Set.of(orderItemRequest1, orderItemRequest2))
+                .status(OrderStatus.DELIVERED.getLabel())
                 .build();
 
         ApiResponse<OrderResponse> orderApiResponse = ApiResponse.<OrderResponse>builder()
@@ -505,7 +512,7 @@ public class OrderControllerTest extends BaseControllerTest {
                 .message(ErrorCode.ORDER_NOT_FOUND.getMessage())
                 .build();
         given()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN)
+                .header(HttpHeaders.AUTHORIZATION, token)
                 .contentType(ContentType.JSON)
                 .body(objectMapper.writeValueAsString(orderRequest))
                 .when().put("/orders/" + id)

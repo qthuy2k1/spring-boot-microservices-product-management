@@ -1,3 +1,7 @@
 eureka:
   client:
     enabled: false
+
+keycloak:
+  client-id: my-realm
+  client-secret: oOIXDbb30Z64L8e14ZXhFyCEPuj1E1N3

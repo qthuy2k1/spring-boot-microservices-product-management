@@ -90,6 +90,11 @@ spring:
             - StripPrefix=2
   main:
     web-application-type: reactive
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:7070/realms/my-realm
 
 
 management:

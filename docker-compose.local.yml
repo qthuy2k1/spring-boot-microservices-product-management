@@ -30,7 +30,7 @@ services:
   # User DB
   postgres-user:
     container_name: postgres-user
-    image: postgres
+    image: postgres:17-alpine
     networks:
       - mynet
     environment:
@@ -52,7 +52,7 @@ services:
   # Product DB
   postgres-product:
     container_name: postgres-product
-    image: postgres
+    image: postgres:17-alpine
     networks:
       - mynet
     environment:
@@ -74,7 +74,7 @@ services:
   # Order DB
   postgres-order:
     container_name: postgres-order
-    image: postgres
+    image: postgres:17-alpine
     networks:
       - mynet
     environment:
@@ -96,7 +96,7 @@ services:
   # Inventory DB
   postgres-inventory:
     container_name: postgres-inventory
-    image: postgres
+    image: postgres:17-alpine
     networks:
       - mynet
     environment:
@@ -222,6 +222,41 @@ services:
     ports:
       - "3000:3000"
 
+  keycloak-db:
+    image: postgres:17-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5437:5432"
+    networks:
+      - mynet
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+
+  keycloak:
+    image: mykeycloak
+    container_name: keycloak
+    depends_on:
+      - keycloak-db
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_HOSTNAME: localhost
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "7070:8080"
+    networks:
+      - mynet
+    command: [ "start-dev" ]
+
 networks:
   mynet:
     driver: bridge
@@ -235,3 +270,4 @@ volumes:
   postgres-order:
   postgres-inventory:
   mongo-payment:
+  keycloak-db-data:
